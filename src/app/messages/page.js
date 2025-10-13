@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { supabase, signOut } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "@/lib/utils";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const messagesEndRef = useRef(null);
@@ -171,7 +171,6 @@ export default function MessagesPage() {
           filter: `conversation_id=eq.${conversationId}`,
         },
         async (payload) => {
-          // Check if message already exists (from optimistic update)
           const messageExists = messages.some((m) => m.id === payload.new.id);
           if (messageExists) return;
 
@@ -188,7 +187,6 @@ export default function MessagesPage() {
 
           if (data) {
             setMessages((prev) => {
-              // Remove temporary message if exists
               const filtered = prev.filter((m) => m.id !== "temp");
               return [...filtered, data];
             });
@@ -217,7 +215,6 @@ export default function MessagesPage() {
       },
     };
 
-    // Optimistic update - add message immediately
     setMessages((prev) => [...prev, tempMessage]);
     const currentMessage = messageText;
     setMessageText("");
@@ -243,14 +240,12 @@ export default function MessagesPage() {
 
       if (error) throw error;
 
-      // Replace temporary message with real one
       setMessages((prev) => {
         const filtered = prev.filter((m) => m.id !== "temp");
         return [...filtered, data];
       });
     } catch (error) {
       console.error("Error sending message:", error);
-      // Remove failed message and restore text
       setMessages((prev) => prev.filter((m) => m.id !== "temp"));
       setMessageText(currentMessage);
       alert("Failed to send message. Please try again.");
@@ -276,7 +271,6 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -320,14 +314,12 @@ export default function MessagesPage() {
         </div>
       </header>
 
-      {/* Messages Layout */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div
           className="bg-white rounded-xl shadow-md overflow-hidden"
           style={{ height: "calc(100vh - 180px)" }}
         >
           <div className="flex h-full">
-            {/* Conversations List */}
             <div className="w-1/3 border-r flex flex-col">
               <div className="p-6 border-b">
                 <h2 className="text-xl font-bold text-gray-900">Messages</h2>
@@ -365,11 +357,9 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            {/* Chat Area */}
             <div className="flex-1 flex flex-col">
               {selectedConversation ? (
                 <>
-                  {/* Chat Header */}
                   <div className="p-6 border-b">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
@@ -384,7 +374,6 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  {/* Messages */}
                   <div className="flex-1 overflow-y-auto p-6 space-y-4">
                     {messages.map((message) => {
                       const isSent = message.sender_id === user.id;
@@ -420,7 +409,6 @@ export default function MessagesPage() {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Message Input */}
                   <div className="p-6 border-t">
                     <form
                       onSubmit={handleSendMessage}
@@ -455,5 +443,22 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading messages...</p>
+          </div>
+        </div>
+      }
+    >
+      <MessagesContent />
+    </Suspense>
   );
 }
