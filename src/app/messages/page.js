@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase, signOut } from "@/lib/supabase";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "@/lib/utils";
 
-function MessagesContent() {
+export default function MessagesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const messagesEndRef = useRef(null);
 
   const [user, setUser] = useState(null);
@@ -32,12 +31,6 @@ function MessagesContent() {
 
       setUser(user);
       await loadConversations(user.id);
-
-      const targetUserId = searchParams.get("userId");
-      if (targetUserId) {
-        await startConversationWithUser(user.id, targetUserId);
-      }
-
       setLoading(false);
     };
 
@@ -86,48 +79,6 @@ function MessagesContent() {
       setConversations(conversationsWithOtherUser);
     } catch (error) {
       console.error("Error loading conversations:", error);
-    }
-  };
-
-  const startConversationWithUser = async (currentUserId, otherUserId) => {
-    try {
-      const { data, error } = await supabase.rpc("get_or_create_conversation", {
-        current_user_id: currentUserId,
-        other_user_id: otherUserId,
-      });
-
-      if (error) throw error;
-
-      const { data: convData } = await supabase
-        .from("conversations")
-        .select(
-          `
-          *,
-          user1:user1_id (id, full_name, profile_photo),
-          user2:user2_id (id, full_name, profile_photo)
-        `
-        )
-        .eq("id", data)
-        .single();
-
-      if (convData) {
-        const conv = {
-          ...convData,
-          otherUser:
-            convData.user1_id === currentUserId
-              ? convData.user2
-              : convData.user1,
-        };
-        setSelectedConversation(conv);
-
-        setConversations((prev) => {
-          const exists = prev.find((c) => c.id === conv.id);
-          if (exists) return prev;
-          return [conv, ...prev];
-        });
-      }
-    } catch (error) {
-      console.error("Error starting conversation:", error);
     }
   };
 
@@ -443,22 +394,5 @@ function MessagesContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function MessagesPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading messages...</p>
-          </div>
-        </div>
-      }
-    >
-      <MessagesContent />
-    </Suspense>
   );
 }

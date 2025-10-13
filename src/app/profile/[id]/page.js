@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import CareTeamButton from "@/components/CareTeamButton";
+import MessageButton from "@/components/MessageButton";
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -162,12 +163,10 @@ export default function UserProfilePage() {
                     currentUserId={currentUser.id}
                     profileUserId={userId}
                   />
-                  <Link
-                    href={`/messages?userId=${userId}`}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                  >
-                    Send Message
-                  </Link>
+                  <MessageButton
+                    currentUserId={currentUser.id}
+                    otherUserId={userId}
+                  />
                 </div>
               )}
             </div>
