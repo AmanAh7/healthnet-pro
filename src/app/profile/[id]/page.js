@@ -17,6 +17,7 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -86,87 +87,145 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      {/* Header - Mobile Responsive */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <Link
               href="/dashboard"
-              className="text-2xl font-bold text-blue-600"
+              className="text-xl md:text-2xl font-bold text-blue-600"
             >
               HealthNet Pro
             </Link>
+
+            {/* Desktop Navigation */}
             <Link
               href="/dashboard"
-              className="text-gray-600 hover:text-blue-600 transition"
+              className="hidden md:block text-gray-600 hover:text-blue-600 transition"
             >
               Back to Dashboard
             </Link>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-700 hover:text-blue-600"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t py-4 space-y-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Profile Content */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-4 md:py-8 max-w-4xl">
         {/* Profile Header Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-          {/* Cover Image */}
-          <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+          {/* Cover Image - Responsive Height */}
+          <div className="h-24 md:h-32 bg-gradient-to-r from-blue-500 to-indigo-600 relative overflow-hidden">
+            {profile?.cover_photo && (
+              <Image
+                src={profile.cover_photo}
+                alt="Cover"
+                fill
+                className="object-cover"
+                priority
+              />
+            )}
+          </div>
 
-          {/* Profile Info */}
-          <div className="px-8 pb-8">
-            <div className="flex justify-between items-start -mt-16">
-              <div className="flex items-end space-x-4">
-                {/* Profile Photo */}
-                <div className="relative">
+          {/* Profile Info - Mobile Responsive */}
+          <div className="px-4 md:px-8 pb-4 md:pb-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start -mt-12 md:-mt-16">
+              <div className="flex flex-col md:flex-row md:items-end md:space-x-4">
+                {/* Profile Photo - Responsive Size */}
+                <div className="relative mb-3 md:mb-0">
                   {profile?.profile_photo ? (
                     <Image
                       src={profile.profile_photo}
                       alt={profile.full_name}
                       width={128}
                       height={128}
-                      className="w-32 h-32 rounded-full border-4 border-white object-cover"
+                      className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white object-cover"
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-4xl font-bold text-blue-600">
+                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-3xl md:text-4xl font-bold text-blue-600">
                       {profile?.full_name?.charAt(0) || "U"}
                     </div>
                   )}
                 </div>
 
-                {/* Name and headline */}
-                <div className="pb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                {/* Name and headline - Mobile Optimized */}
+                <div className="md:pb-2">
+                  <h1 className="text-xl md:text-3xl font-bold text-gray-900">
                     {profile?.full_name || "User Name"}
                   </h1>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-sm md:text-base text-gray-600 mt-1">
                     {profile?.headline || "Healthcare Professional"}
                   </p>
-                  <p className="text-gray-500 text-sm mt-1 capitalize">
+                  <p className="text-xs md:text-sm text-gray-500 mt-1 capitalize">
                     {profile?.user_type} •{" "}
                     {profile?.location || "Location not set"}
                   </p>
                 </div>
               </div>
 
-              {/* Buttons - Edit Profile or Care Team & Message */}
+              {/* Buttons - Mobile Responsive Layout */}
               {isOwnProfile ? (
                 <Link
                   href="/profile/edit"
-                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="mt-4 md:mt-4 w-full md:w-auto px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center text-sm md:text-base font-semibold"
                 >
                   Edit Profile
                 </Link>
               ) : (
-                <div className="flex gap-3 mt-4">
-                  <CareTeamButton
-                    currentUserId={currentUser.id}
-                    profileUserId={userId}
-                  />
-                  <MessageButton
-                    currentUserId={currentUser.id}
-                    otherUserId={userId}
-                  />
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 mt-4 w-full md:w-auto">
+                  <div className="flex-1 sm:flex-none">
+                    <CareTeamButton
+                      currentUserId={currentUser.id}
+                      profileUserId={userId}
+                    />
+                  </div>
+                  <div className="flex-1 sm:flex-none">
+                    <MessageButton
+                      currentUserId={currentUser.id}
+                      otherUserId={userId}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -174,26 +233,34 @@ export default function UserProfilePage() {
         </div>
 
         {/* About Section */}
-        <div className="bg-white rounded-xl shadow-md p-8 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">About</h2>
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            About
+          </h2>
           {profile?.bio ? (
-            <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
+            <p className="text-sm md:text-base text-gray-700 leading-relaxed">
+              {profile.bio}
+            </p>
           ) : (
-            <p className="text-gray-400 italic">No bio added yet.</p>
+            <p className="text-sm md:text-base text-gray-400 italic">
+              No bio added yet.
+            </p>
           )}
         </div>
 
         {/* Experience Section */}
-        <div className="bg-white rounded-xl shadow-md p-8 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Experience</h2>
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            Experience
+          </h2>
           {profile?.experience && profile.experience.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {profile.experience.map((exp, index) => (
-                <div key={index} className="flex space-x-4">
+                <div key={index} className="flex space-x-3 md:space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-6 h-6 text-blue-600"
+                        className="w-5 h-5 md:w-6 md:h-6 text-blue-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -207,35 +274,45 @@ export default function UserProfilePage() {
                       </svg>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">{exp.title}</h3>
-                    <p className="text-gray-600">{exp.company}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900">
+                      {exp.title}
+                    </h3>
+                    <p className="text-sm md:text-base text-gray-600">
+                      {exp.company}
+                    </p>
+                    <p className="text-xs md:text-sm text-gray-500 mt-1">
                       {exp.startDate} - {exp.current ? "Present" : exp.endDate}
                     </p>
                     {exp.description && (
-                      <p className="text-gray-700 mt-2">{exp.description}</p>
+                      <p className="text-sm md:text-base text-gray-700 mt-2">
+                        {exp.description}
+                      </p>
                     )}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-400 italic">No experience added yet.</p>
+            <p className="text-sm md:text-base text-gray-400 italic">
+              No experience added yet.
+            </p>
           )}
         </div>
 
         {/* Education Section */}
-        <div className="bg-white rounded-xl shadow-md p-8 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Education</h2>
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            Education
+          </h2>
           {profile?.education && profile.education.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {profile.education.map((edu, index) => (
-                <div key={index} className="flex space-x-4">
+                <div key={index} className="flex space-x-3 md:space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-6 h-6 text-green-600"
+                        className="w-5 h-5 md:w-6 md:h-6 text-green-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -255,12 +332,14 @@ export default function UserProfilePage() {
                       </svg>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">{edu.school}</h3>
-                    <p className="text-gray-600">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900">
+                      {edu.school}
+                    </h3>
+                    <p className="text-sm md:text-base text-gray-600">
                       {edu.degree} {edu.field && `in ${edu.field}`}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs md:text-sm text-gray-500 mt-1">
                       {edu.startYear} - {edu.endYear}
                     </p>
                   </div>
@@ -268,26 +347,32 @@ export default function UserProfilePage() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-400 italic">No education added yet.</p>
+            <p className="text-sm md:text-base text-gray-400 italic">
+              No education added yet.
+            </p>
           )}
         </div>
 
         {/* Skills Section */}
-        <div className="bg-white rounded-xl shadow-md p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Skills</h2>
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-8">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            Skills
+          </h2>
           {profile?.skills && profile.skills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {profile.skills.map((skill, index) => (
                 <span
                   key={index}
-                  className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                  className="px-3 py-1 md:px-4 md:py-2 bg-blue-50 text-blue-700 rounded-full text-xs md:text-sm font-medium"
                 >
                   {skill}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-gray-400 italic">No skills added yet.</p>
+            <p className="text-sm md:text-base text-gray-400 italic">
+              No skills added yet.
+            </p>
           )}
         </div>
       </div>

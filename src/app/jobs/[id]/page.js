@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { formatDistanceToNow } from "@/lib/utils";
 
 export default function JobDetailsPage() {
@@ -18,6 +19,7 @@ export default function JobDetailsPage() {
   const [applying, setApplying] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadJob = async () => {
@@ -124,39 +126,85 @@ export default function JobDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      {/* Header - Mobile Responsive */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <Link
               href="/dashboard"
-              className="text-2xl font-bold text-blue-600"
+              className="text-xl md:text-2xl font-bold text-blue-600"
             >
               HealthNet Pro
             </Link>
+
+            {/* Desktop Navigation */}
             <Link
               href="/jobs"
-              className="text-gray-600 hover:text-blue-600 transition"
+              className="hidden md:block text-gray-600 hover:text-blue-600 transition"
             >
               Back to Jobs
             </Link>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-700 hover:text-blue-600"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t py-4 space-y-2">
+              <Link
+                href="/jobs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Back to Jobs
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Job Details */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-white rounded-xl shadow-md p-8 mb-6">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{job.title}</h1>
-              <p className="text-xl text-gray-700 mt-2 font-semibold">
+      <div className="container mx-auto px-4 py-4 md:py-8 max-w-4xl">
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                {job.title}
+              </h1>
+              <p className="text-lg md:text-xl text-gray-700 mt-2 font-semibold">
                 {job.company}
               </p>
-              <div className="flex flex-wrap gap-4 mt-4 text-gray-600">
+              <div className="flex flex-wrap gap-2 md:gap-4 mt-4 text-sm md:text-base text-gray-600">
                 <span className="flex items-center">
                   <svg
-                    className="w-5 h-5 mr-2"
+                    className="w-4 h-4 md:w-5 md:h-5 mr-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -182,24 +230,24 @@ export default function JobDetailsPage() {
                 <span className="capitalize">{job.experience_level} Level</span>
                 {job.salary_range && <span>{job.salary_range}</span>}
               </div>
-              <p className="text-sm text-gray-500 mt-4">
+              <p className="text-xs md:text-sm text-gray-500 mt-4">
                 Posted {formatDistanceToNow(job.created_at)}
               </p>
             </div>
 
             {!isOwnJob && (
-              <div>
+              <div className="flex-shrink-0">
                 {hasApplied ? (
                   <button
                     disabled
-                    className="px-8 py-3 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+                    className="w-full md:w-auto px-6 md:px-8 py-2 md:py-3 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm md:text-base"
                   >
                     Applied
                   </button>
                 ) : (
                   <button
                     onClick={() => setShowApplyForm(true)}
-                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                    className="w-full md:w-auto px-6 md:px-8 py-2 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm md:text-base"
                   >
                     Apply Now
                   </button>
@@ -210,8 +258,8 @@ export default function JobDetailsPage() {
 
           {/* Apply Form */}
           {showApplyForm && (
-            <div className="border-t pt-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
+            <div className="border-t pt-4 md:pt-6 mb-6">
+              <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4">
                 Submit Application
               </h3>
               <form onSubmit={handleApply}>
@@ -224,21 +272,21 @@ export default function JobDetailsPage() {
                     onChange={(e) => setCoverLetter(e.target.value)}
                     rows={5}
                     placeholder="Tell the employer why you're a great fit for this role..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm md:text-base text-gray-900 placeholder-gray-400"
                   />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                   <button
                     type="submit"
                     disabled={applying}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm md:text-base"
                   >
                     {applying ? "Submitting..." : "Submit Application"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowApplyForm(false)}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base"
                   >
                     Cancel
                   </button>
@@ -248,22 +296,22 @@ export default function JobDetailsPage() {
           )}
 
           {/* Job Description */}
-          <div className="border-t pt-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+          <div className="border-t pt-4 md:pt-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
               Job Description
             </h2>
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+            <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
               {job.description}
             </p>
           </div>
 
           {/* Requirements */}
           {job.requirements && (
-            <div className="border-t pt-6 mt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
                 Requirements
               </h2>
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {job.requirements}
               </p>
             </div>
@@ -271,30 +319,50 @@ export default function JobDetailsPage() {
 
           {/* Benefits */}
           {job.benefits && (
-            <div className="border-t pt-6 mt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Benefits</h2>
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+            <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+                Benefits
+              </h2>
+              <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {job.benefits}
               </p>
             </div>
           )}
 
-          {/* Posted By */}
-          <div className="border-t pt-6 mt-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Posted By</h2>
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-                {job.profiles?.full_name?.charAt(0) || "U"}
+          {/* Posted By - WITH PROFILE PHOTO */}
+          <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+              Posted By
+            </h2>
+            <Link
+              href={`/profile/${job.employer_id}`}
+              className="flex items-center space-x-3 md:space-x-4 hover:bg-gray-50 p-3 rounded-lg transition"
+            >
+              {/* Profile Photo with Image Support */}
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                {job.profiles?.profile_photo ? (
+                  <Image
+                    src={job.profiles.profile_photo}
+                    alt={job.profiles.full_name || "User"}
+                    width={56}
+                    height={56}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <span className="text-lg md:text-xl font-bold text-blue-600">
+                    {job.profiles?.full_name?.charAt(0) || "U"}
+                  </span>
+                )}
               </div>
               <div>
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-sm md:text-base text-gray-900 hover:text-blue-600">
                   {job.profiles?.full_name || "User"}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs md:text-sm text-gray-600">
                   {job.profiles?.headline || "Healthcare Professional"}
                 </p>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

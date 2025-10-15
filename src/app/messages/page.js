@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase, signOut } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { formatDistanceToNow } from "@/lib/utils";
 
 export default function MessagesPage() {
@@ -17,6 +18,8 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(true);
 
   useEffect(() => {
     const initMessages = async () => {
@@ -209,6 +212,16 @@ export default function MessagesPage() {
     await signOut();
   };
 
+  const handleSelectConversation = (conv) => {
+    setSelectedConversation(conv);
+    setShowConversationList(false); // Hide list on mobile when conversation selected
+  };
+
+  const handleBackToList = () => {
+    setShowConversationList(true);
+    setSelectedConversation(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -222,17 +235,19 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+      {/* Header - Mobile Responsive */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <Link
               href="/dashboard"
-              className="text-2xl font-bold text-blue-600"
+              className="text-xl md:text-2xl font-bold text-blue-600"
             >
               HealthNet Pro
             </Link>
 
-            <nav className="flex items-center space-x-6">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
               <Link
                 href="/dashboard"
                 className="text-gray-700 hover:text-blue-600 transition"
@@ -261,19 +276,98 @@ export default function MessagesPage() {
                 Sign Out
               </button>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-700 hover:text-blue-600"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t py-4 space-y-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Home
+              </Link>
+              <Link
+                href="/care-team"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Care Team
+              </Link>
+              <Link
+                href="/jobs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Jobs
+              </Link>
+              <Link
+                href="/messages"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-blue-600 font-semibold hover:bg-gray-50 rounded"
+              >
+                Messages
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-4 md:py-8 max-w-7xl">
         <div
           className="bg-white rounded-xl shadow-md overflow-hidden"
-          style={{ height: "calc(100vh - 180px)" }}
+          style={{ height: "calc(100vh - 140px)" }}
         >
           <div className="flex h-full">
-            <div className="w-1/3 border-r flex flex-col">
-              <div className="p-6 border-b">
-                <h2 className="text-xl font-bold text-gray-900">Messages</h2>
+            {/* Conversation List - Show/hide on mobile */}
+            <div
+              className={`${
+                showConversationList ? "flex" : "hidden"
+              } md:flex w-full md:w-1/3 border-r flex-col`}
+            >
+              <div className="p-4 md:p-6 border-b">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900">
+                  Messages
+                </h2>
               </div>
               <div className="flex-1 overflow-y-auto">
                 {conversations.length === 0 ? (
@@ -284,20 +378,33 @@ export default function MessagesPage() {
                   conversations.map((conv) => (
                     <button
                       key={conv.id}
-                      onClick={() => setSelectedConversation(conv)}
+                      onClick={() => handleSelectConversation(conv)}
                       className={`w-full p-4 border-b hover:bg-gray-50 transition text-left ${
                         selectedConversation?.id === conv.id ? "bg-blue-50" : ""
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
-                          {conv.otherUser?.full_name?.charAt(0) || "U"}
+                        {/* Profile Picture */}
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          {conv.otherUser?.profile_photo ? (
+                            <Image
+                              src={conv.otherUser.profile_photo}
+                              alt={conv.otherUser.full_name || "User"}
+                              width={48}
+                              height={48}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <span className="text-sm md:text-base font-bold text-blue-600">
+                              {conv.otherUser?.full_name?.charAt(0) || "U"}
+                            </span>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 truncate">
+                          <p className="font-semibold text-sm md:text-base text-gray-900 truncate">
                             {conv.otherUser?.full_name || "User"}
                           </p>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="text-xs md:text-sm text-gray-500 truncate">
                             Click to start messaging
                           </p>
                         </div>
@@ -308,24 +415,66 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col">
+            {/* Chat Area - Show/hide on mobile */}
+            <div
+              className={`${
+                showConversationList ? "hidden" : "flex"
+              } md:flex flex-1 flex-col`}
+            >
               {selectedConversation ? (
                 <>
-                  <div className="p-6 border-b">
+                  {/* Chat Header */}
+                  <div className="p-4 md:p-6 border-b">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-                        {selectedConversation.otherUser?.full_name?.charAt(0) ||
-                          "U"}
+                      {/* Back button for mobile */}
+                      <button
+                        onClick={handleBackToList}
+                        className="md:hidden p-2 hover:bg-gray-100 rounded-lg -ml-2"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 19l-7-7 7-7"
+                          />
+                        </svg>
+                      </button>
+                      {/* Profile Picture */}
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        {selectedConversation.otherUser?.profile_photo ? (
+                          <Image
+                            src={selectedConversation.otherUser.profile_photo}
+                            alt={
+                              selectedConversation.otherUser.full_name || "User"
+                            }
+                            width={40}
+                            height={40}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <span className="text-sm md:text-base font-bold text-blue-600">
+                            {selectedConversation.otherUser?.full_name?.charAt(
+                              0
+                            ) || "U"}
+                          </span>
+                        )}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-sm md:text-base text-gray-900">
                           {selectedConversation.otherUser?.full_name || "User"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                     {messages.map((message) => {
                       const isSent = message.sender_id === user.id;
                       const isTemp = message.id === "temp";
@@ -337,13 +486,15 @@ export default function MessagesPage() {
                           }`}
                         >
                           <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            className={`max-w-[85%] md:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg ${
                               isSent
                                 ? "bg-blue-600 text-white"
                                 : "bg-gray-200 text-gray-900"
                             } ${isTemp ? "opacity-60" : ""}`}
                           >
-                            <p>{message.content}</p>
+                            <p className="text-sm md:text-base break-words">
+                              {message.content}
+                            </p>
                             <p
                               className={`text-xs mt-1 ${
                                 isSent ? "text-blue-100" : "text-gray-500"
@@ -360,10 +511,11 @@ export default function MessagesPage() {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  <div className="p-6 border-t">
+                  {/* Message Input */}
+                  <div className="p-4 md:p-6 border-t">
                     <form
                       onSubmit={handleSendMessage}
-                      className="flex space-x-3"
+                      className="flex space-x-2 md:space-x-3"
                     >
                       <input
                         type="text"
@@ -372,12 +524,12 @@ export default function MessagesPage() {
                         placeholder="Type a message..."
                         maxLength={2000}
                         disabled={sending}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100"
+                        className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 text-sm md:text-base"
                       />
                       <button
                         type="submit"
                         disabled={sending || !messageText.trim()}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                        className="px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm md:text-base font-semibold"
                       >
                         {sending ? "..." : "Send"}
                       </button>
@@ -385,8 +537,10 @@ export default function MessagesPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-500">
-                  <p>Select a conversation to start messaging</p>
+                <div className="flex-1 flex items-center justify-center text-gray-500 p-4">
+                  <p className="text-sm md:text-base text-center">
+                    Select a conversation to start messaging
+                  </p>
                 </div>
               )}
             </div>

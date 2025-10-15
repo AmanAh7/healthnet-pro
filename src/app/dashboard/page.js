@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase, signOut } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import CreatePost from "@/components/CreatePost";
 import PostCard from "@/components/PostCard";
 
@@ -111,9 +112,12 @@ export default function DashboardPage() {
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <div className="text-xl md:text-2xl font-bold text-blue-600">
+            <Link
+              href="/dashboard"
+              className="text-xl md:text-2xl font-bold text-blue-600"
+            >
               HealthNet Pro
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
@@ -229,9 +233,21 @@ export default function DashboardPage() {
         {/* Mobile Horizontal Profile Bar */}
         <div className="md:hidden mb-4 bg-white rounded-xl shadow-md p-4 flex items-center space-x-4 overflow-x-auto">
           <div className="flex-shrink-0">
-            <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-blue-600">
-              {profile?.full_name?.charAt(0) || "U"}
-            </div>
+            {profile?.profile_photo ? (
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200">
+                <Image
+                  src={profile.profile_photo}
+                  alt={profile.full_name || "Profile"}
+                  width={56}
+                  height={56}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            ) : (
+              <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-blue-600">
+                {profile?.full_name?.charAt(0) || "U"}
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-gray-900 truncate">
@@ -254,13 +270,37 @@ export default function DashboardPage() {
           {/* Left Sidebar - Hidden on mobile, visible on md+ */}
           <div className="hidden md:block md:col-span-1">
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="h-20 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+              {/* Cover Photo */}
+              <div className="h-20 relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600">
+                {profile?.cover_photo && (
+                  <Image
+                    src={profile.cover_photo}
+                    alt="Cover"
+                    width={600}
+                    height={80}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                )}
+              </div>
 
               <div className="p-6 text-center -mt-12">
                 <div className="inline-block relative">
-                  <div className="w-24 h-24 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center text-3xl font-bold text-blue-600">
-                    {profile?.full_name?.charAt(0) || "U"}
-                  </div>
+                  {profile?.profile_photo ? (
+                    <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-200">
+                      <Image
+                        src={profile.profile_photo}
+                        alt={profile.full_name || "Profile"}
+                        width={96}
+                        height={96}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center text-3xl font-bold text-blue-600">
+                      {profile?.full_name?.charAt(0) || "U"}
+                    </div>
+                  )}
                 </div>
 
                 <h2 className="mt-4 text-xl font-bold text-gray-900">

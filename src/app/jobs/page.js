@@ -211,7 +211,7 @@ export default function JobsPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-4 md:py-8 max-w-6xl">
-        {/* Header Section - Responsive */}
+        {/* Header Section - Responsive with TWO BUTTONS */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -221,12 +221,21 @@ export default function JobsPage() {
               Find your next opportunity in healthcare
             </p>
           </div>
-          <Link
-            href="/jobs/post"
-            className="px-4 md:px-6 py-2 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-center text-sm md:text-base"
-          >
-            Post a Job
-          </Link>
+          {/* Button Group */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/jobs/applications"
+              className="px-4 md:px-6 py-2 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold text-center text-sm md:text-base"
+            >
+              My Applications
+            </Link>
+            <Link
+              href="/jobs/post"
+              className="px-4 md:px-6 py-2 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-center text-sm md:text-base"
+            >
+              Post a Job
+            </Link>
+          </div>
         </div>
 
         {/* Filters - Mobile Friendly */}

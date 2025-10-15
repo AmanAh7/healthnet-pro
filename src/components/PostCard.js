@@ -134,17 +134,19 @@ export default function PostCard({ post, currentUser, onDelete }) {
           <div className="flex items-center space-x-3">
             {/* Profile Picture */}
             <Link href={`/profile/${post.user_id}`}>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl font-semibold text-blue-600 overflow-hidden cursor-pointer hover:bg-blue-200 transition flex-shrink-0">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center cursor-pointer hover:opacity-80 transition flex-shrink-0">
                 {post.profiles?.profile_photo ? (
                   <Image
                     src={post.profiles.profile_photo}
-                    alt="Profile"
+                    alt={post.profiles.full_name || "User"}
                     width={48}
                     height={48}
-                    className="object-cover w-full h-full rounded-full"
+                    className="object-cover w-full h-full"
                   />
                 ) : (
-                  post.profiles?.full_name?.charAt(0) || "U"
+                  <span className="text-xl font-semibold text-blue-600">
+                    {post.profiles?.full_name?.charAt(0) || "U"}
+                  </span>
                 )}
               </div>
             </Link>
@@ -302,8 +304,20 @@ export default function PostCard({ post, currentUser, onDelete }) {
           <div className="space-y-4 mb-4">
             {comments.map((comment) => (
               <div key={comment.id} className="flex space-x-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold text-gray-600 flex-shrink-0">
-                  {comment.profiles?.full_name?.charAt(0) || "U"}
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  {comment.profiles?.profile_photo ? (
+                    <Image
+                      src={comment.profiles.profile_photo}
+                      alt={comment.profiles.full_name || "User"}
+                      width={32}
+                      height={32}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-gray-600">
+                      {comment.profiles?.full_name?.charAt(0) || "U"}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 bg-white rounded-lg p-3 shadow-sm">
                   <p className="font-semibold text-sm text-gray-900">

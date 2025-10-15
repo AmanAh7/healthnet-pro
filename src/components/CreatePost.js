@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 export default function CreatePost({ user, profile, onPostCreated }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,12 +44,25 @@ export default function CreatePost({ user, profile, onPostCreated }) {
       {!isExpanded ? (
         <div className="p-4">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
-              {profile?.full_name?.charAt(0) || "U"}
+            {/* Profile Picture with Image */}
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+              {profile?.profile_photo ? (
+                <Image
+                  src={profile.profile_photo}
+                  alt={profile.full_name || "Profile"}
+                  width={48}
+                  height={48}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <span className="text-base md:text-xl font-bold text-blue-600">
+                  {profile?.full_name?.charAt(0) || "U"}
+                </span>
+              )}
             </div>
             <button
               onClick={() => setIsExpanded(true)}
-              className="flex-1 px-4 py-3 text-left text-gray-500 border border-gray-300 rounded-full hover:bg-gray-50 transition"
+              className="flex-1 px-4 py-2 md:py-3 text-left text-sm md:text-base text-gray-500 border border-gray-300 rounded-full hover:bg-gray-50 transition"
             >
               Start a post
             </button>
@@ -56,9 +70,9 @@ export default function CreatePost({ user, profile, onPostCreated }) {
 
           {/* Media Options */}
           <div className="flex items-center justify-around pt-2 border-t">
-            <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
+            <button className="flex items-center space-x-2 px-2 md:px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
               <svg
-                className="w-6 h-6 text-blue-500"
+                className="w-5 h-5 md:w-6 md:h-6 text-blue-500"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -68,9 +82,9 @@ export default function CreatePost({ user, profile, onPostCreated }) {
                 Photo
               </span>
             </button>
-            <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
+            <button className="flex items-center space-x-2 px-2 md:px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
               <svg
-                className="w-6 h-6 text-green-600"
+                className="w-5 h-5 md:w-6 md:h-6 text-green-600"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -80,9 +94,9 @@ export default function CreatePost({ user, profile, onPostCreated }) {
                 Video
               </span>
             </button>
-            <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
+            <button className="flex items-center space-x-2 px-2 md:px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
               <svg
-                className="w-6 h-6 text-orange-500"
+                className="w-5 h-5 md:w-6 md:h-6 text-orange-500"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -98,11 +112,24 @@ export default function CreatePost({ user, profile, onPostCreated }) {
         /* Expanded View */
         <div className="p-4">
           <div className="flex items-start space-x-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
-              {profile?.full_name?.charAt(0) || "U"}
+            {/* Profile Picture with Image */}
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+              {profile?.profile_photo ? (
+                <Image
+                  src={profile.profile_photo}
+                  alt={profile.full_name || "Profile"}
+                  width={48}
+                  height={48}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <span className="text-base md:text-xl font-bold text-blue-600">
+                  {profile?.full_name?.charAt(0) || "U"}
+                </span>
+              )}
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-sm md:text-base text-gray-900">
                 {profile?.full_name || "User"}
               </p>
               <p className="text-xs text-gray-500">
@@ -115,13 +142,13 @@ export default function CreatePost({ user, profile, onPostCreated }) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What do you want to talk about?"
-            className="w-full px-4 py-3 border-0 focus:ring-0 outline-none resize-none text-gray-900 placeholder-gray-400"
+            className="w-full px-4 py-3 border-0 focus:ring-0 outline-none resize-none text-sm md:text-base text-gray-900 placeholder-gray-400"
             rows={4}
             maxLength={3000}
             autoFocus
           />
 
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-4 border-t">
             <div className="flex items-center space-x-2">
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
                 <svg
@@ -152,14 +179,14 @@ export default function CreatePost({ user, profile, onPostCreated }) {
                   setContent("");
                   setIsExpanded(false);
                 }}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition font-semibold"
+                className="flex-1 md:flex-none px-4 py-2 text-sm md:text-base text-gray-700 hover:bg-gray-100 rounded-lg transition font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePost}
                 disabled={!content.trim() || posting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 md:flex-none px-6 py-2 text-sm md:text-base bg-blue-600 text-white rounded-full hover:bg-blue-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {posting ? "Posting..." : "Post"}
               </button>

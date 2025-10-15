@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase, signOut } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CareTeamPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function CareTeamPage() {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("members");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadCareTeam = async () => {
@@ -204,18 +206,19 @@ export default function CareTeamPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      {/* Header - Mobile Responsive */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <Link
               href="/dashboard"
-              className="text-2xl font-bold text-blue-600"
+              className="text-xl md:text-2xl font-bold text-blue-600"
             >
               HealthNet Pro
             </Link>
 
-            <nav className="flex items-center space-x-6">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
               <Link
                 href="/dashboard"
                 className="text-gray-700 hover:text-blue-600 transition"
@@ -244,15 +247,89 @@ export default function CareTeamPage() {
                 Sign Out
               </button>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-700 hover:text-blue-600"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t py-4 space-y-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Home
+              </Link>
+              <Link
+                href="/care-team"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-blue-600 font-semibold hover:bg-gray-50 rounded"
+              >
+                Care Team
+              </Link>
+              <Link
+                href="/jobs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Jobs
+              </Link>
+              <Link
+                href="/messages"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Messages
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Care Team</h1>
-          <p className="text-gray-600 mt-2">
+      <div className="container mx-auto px-4 py-4 md:py-8 max-w-6xl">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            My Care Team
+          </h1>
+          <p className="text-sm md:text-base text-gray-600 mt-2">
             Connect with healthcare professionals to build your collaborative
             network
           </p>
@@ -260,11 +337,11 @@ export default function CareTeamPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-md mb-6">
-          <div className="border-b">
-            <div className="flex space-x-8 px-6">
+          <div className="border-b overflow-x-auto">
+            <div className="flex space-x-4 md:space-x-8 px-4 md:px-6 min-w-max">
               <button
                 onClick={() => setActiveTab("members")}
-                className={`py-4 px-2 border-b-2 font-semibold transition ${
+                className={`py-4 px-2 border-b-2 font-semibold transition whitespace-nowrap text-sm md:text-base ${
                   activeTab === "members"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-blue-600"
@@ -274,7 +351,7 @@ export default function CareTeamPage() {
               </button>
               <button
                 onClick={() => setActiveTab("requests")}
-                className={`py-4 px-2 border-b-2 font-semibold transition ${
+                className={`py-4 px-2 border-b-2 font-semibold transition whitespace-nowrap text-sm md:text-base ${
                   activeTab === "requests"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-blue-600"
@@ -284,7 +361,7 @@ export default function CareTeamPage() {
               </button>
               <button
                 onClick={() => setActiveTab("suggestions")}
-                className={`py-4 px-2 border-b-2 font-semibold transition ${
+                className={`py-4 px-2 border-b-2 font-semibold transition whitespace-nowrap text-sm md:text-base ${
                   activeTab === "suggestions"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-blue-600"
@@ -296,7 +373,7 @@ export default function CareTeamPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             {/* Care Team Members Tab */}
             {activeTab === "members" && (
               <div>
@@ -313,38 +390,51 @@ export default function CareTeamPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     {careTeamMembers.map((member) => (
                       <div
                         key={member.id}
-                        className="border rounded-lg p-6 hover:shadow-lg transition"
+                        className="border rounded-lg p-4 md:p-6 hover:shadow-lg transition"
                       >
                         <div className="flex items-start space-x-4">
-                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600 flex-shrink-0">
-                            {member.full_name?.charAt(0) || "U"}
+                          {/* Profile Picture with Image */}
+                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            {member.profile_photo ? (
+                              <Image
+                                src={member.profile_photo}
+                                alt={member.full_name || "User"}
+                                width={64}
+                                height={64}
+                                className="object-cover w-full h-full"
+                              />
+                            ) : (
+                              <span className="text-xl md:text-2xl font-bold text-blue-600">
+                                {member.full_name?.charAt(0) || "U"}
+                              </span>
+                            )}
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <Link href={`/profile/${member.id}`}>
-                              <h3 className="font-bold text-gray-900 hover:text-blue-600 cursor-pointer">
+                              <h3 className="font-bold text-gray-900 hover:text-blue-600 cursor-pointer truncate">
                                 {member.full_name}
                               </h3>
                             </Link>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-xs md:text-sm text-gray-600 mt-1 truncate">
                               {member.headline || "Healthcare Professional"}
                             </p>
                             <p className="text-xs text-gray-500 mt-1 capitalize">
                               {member.user_type}
                             </p>
-                            <div className="flex space-x-3 mt-4">
+                            <div className="flex flex-wrap gap-2 md:gap-3 mt-3 md:mt-4">
                               <Link
                                 href={`/profile/${member.id}`}
-                                className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
+                                className="text-xs md:text-sm text-blue-600 hover:text-blue-700 font-semibold"
                               >
                                 View Profile
                               </Link>
                               <button
                                 onClick={() => handleRemoveMember(member.id)}
-                                className="text-sm text-red-600 hover:text-red-700 font-semibold"
+                                className="text-xs md:text-sm text-red-600 hover:text-red-700 font-semibold"
                               >
                                 Remove
                               </button>
@@ -370,17 +460,30 @@ export default function CareTeamPage() {
                     {pendingRequests.map((request) => (
                       <div
                         key={request.id}
-                        className="border rounded-lg p-6 flex items-center justify-between"
+                        className="border rounded-lg p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
                       >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600">
-                            {request.requester.full_name?.charAt(0) || "U"}
+                        <div className="flex items-center space-x-3 md:space-x-4">
+                          {/* Profile Picture with Image */}
+                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            {request.requester.profile_photo ? (
+                              <Image
+                                src={request.requester.profile_photo}
+                                alt={request.requester.full_name || "User"}
+                                width={64}
+                                height={64}
+                                className="object-cover w-full h-full"
+                              />
+                            ) : (
+                              <span className="text-xl md:text-2xl font-bold text-blue-600">
+                                {request.requester.full_name?.charAt(0) || "U"}
+                              </span>
+                            )}
                           </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900">
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-gray-900 truncate">
                               {request.requester.full_name}
                             </h3>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs md:text-sm text-gray-600 truncate">
                               {request.requester.headline ||
                                 "Healthcare Professional"}
                             </p>
@@ -389,16 +492,16 @@ export default function CareTeamPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex space-x-3">
+                        <div className="flex gap-2 md:gap-3">
                           <button
                             onClick={() => handleAcceptRequest(request.id)}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm md:text-base"
                           >
                             Accept
                           </button>
                           <button
                             onClick={() => handleRejectRequest(request.id)}
-                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                            className="flex-1 md:flex-none px-4 md:px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm md:text-base"
                           >
                             Decline
                           </button>
@@ -418,21 +521,34 @@ export default function CareTeamPage() {
                     <p className="text-gray-500">No suggestions available</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     {suggestions.map((suggestion) => (
                       <div
                         key={suggestion.id}
-                        className="border rounded-lg p-6 hover:shadow-lg transition"
+                        className="border rounded-lg p-4 md:p-6 hover:shadow-lg transition"
                       >
                         <div className="flex items-start space-x-4">
-                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600 flex-shrink-0">
-                            {suggestion.full_name?.charAt(0) || "U"}
+                          {/* Profile Picture with Image */}
+                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            {suggestion.profile_photo ? (
+                              <Image
+                                src={suggestion.profile_photo}
+                                alt={suggestion.full_name || "User"}
+                                width={64}
+                                height={64}
+                                className="object-cover w-full h-full"
+                              />
+                            ) : (
+                              <span className="text-xl md:text-2xl font-bold text-blue-600">
+                                {suggestion.full_name?.charAt(0) || "U"}
+                              </span>
+                            )}
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-gray-900">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 truncate">
                               {suggestion.full_name}
                             </h3>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-xs md:text-sm text-gray-600 mt-1 truncate">
                               {suggestion.headline || "Healthcare Professional"}
                             </p>
                             <p className="text-xs text-gray-500 mt-1 capitalize">
@@ -440,7 +556,7 @@ export default function CareTeamPage() {
                             </p>
                             <button
                               onClick={() => handleSendRequest(suggestion.id)}
-                              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
+                              className="mt-3 md:mt-4 px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full text-sm md:text-base"
                             >
                               Add to Care Team
                             </button>
