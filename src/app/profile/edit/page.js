@@ -1,4 +1,3 @@
-// src/app/profile/edit/page.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,14 +5,20 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import ImageCropModal from "@/components/ImageCropModal";
 
 export default function EditProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [showCoverCrop, setShowCoverCrop] = useState(false);
+  const [showProfileCrop, setShowProfileCrop] = useState(false);
+  const [tempCoverImage, setTempCoverImage] = useState(null);
+  const [tempProfileImage, setTempProfileImage] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -24,6 +29,7 @@ export default function EditProfilePage() {
     phone: "",
     linkedin_url: "",
     profile_photo: "",
+    cover_photo: "",
     skills: [],
   });
 
@@ -49,7 +55,6 @@ export default function EditProfilePage() {
         return;
       }
 
-      console.log("Loading profile for user:", user.id, user.email);
       setUser(user);
 
       const { data: profile, error } = await supabase
@@ -59,12 +64,7 @@ export default function EditProfilePage() {
         .maybeSingle();
 
       if (error) {
-        console.error("Supabase error details:", {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-        });
+        console.error("Supabase error details:", error);
         setMessage({
           type: "error",
           text: "Failed to load profile: " + error.message,
@@ -72,8 +72,6 @@ export default function EditProfilePage() {
       }
 
       if (!profile) {
-        console.log("No profile found, creating default...");
-        // Create profile if it doesn't exist
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
           .insert([
@@ -91,7 +89,6 @@ export default function EditProfilePage() {
           console.error("Error creating profile:", createError);
           setMessage({ type: "error", text: "Failed to create profile" });
         } else {
-          console.log("Created new profile:", newProfile);
           setFormData({
             full_name: newProfile.full_name || "",
             headline: "",
@@ -100,11 +97,11 @@ export default function EditProfilePage() {
             phone: "",
             linkedin_url: "",
             profile_photo: "",
+            cover_photo: "",
             skills: [],
           });
         }
       } else {
-        console.log("Loaded existing profile:", profile);
         setFormData({
           full_name: profile.full_name || "",
           headline: profile.headline || "",
@@ -113,6 +110,7 @@ export default function EditProfilePage() {
           phone: profile.phone || "",
           linkedin_url: profile.linkedin_url || "",
           profile_photo: profile.profile_photo || "",
+          cover_photo: profile.cover_photo || "",
           skills: profile.skills || [],
         });
         setExperience(profile.experience || []);
@@ -133,15 +131,26 @@ export default function EditProfilePage() {
     });
   };
 
-  const handleImageUpload = async (e) => {
+  const handleProfileImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTempProfileImage(reader.result);
+      setShowProfileCrop(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleProfileCropComplete = async (croppedBlob) => {
+    setUploadingProfile(true);
+    setShowProfileCrop(false);
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append(
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", croppedBlob, "profile.jpg");
+      formDataUpload.append(
         "upload_preset",
         process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
       );
@@ -150,7 +159,7 @@ export default function EditProfilePage() {
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
         {
           method: "POST",
-          body: formData,
+          body: formDataUpload,
         }
       );
 
@@ -161,11 +170,66 @@ export default function EditProfilePage() {
         profile_photo: data.secure_url,
       }));
 
-      setMessage({ type: "success", text: "Photo uploaded successfully!" });
+      setMessage({
+        type: "success",
+        text: "Profile photo uploaded successfully!",
+      });
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to upload photo" });
+      setMessage({ type: "error", text: "Failed to upload profile photo" });
     } finally {
-      setUploading(false);
+      setUploadingProfile(false);
+      setTempProfileImage(null);
+    }
+  };
+
+  const handleCoverImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTempCoverImage(reader.result);
+      setShowCoverCrop(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCoverCropComplete = async (croppedBlob) => {
+    setUploadingCover(true);
+    setShowCoverCrop(false);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", croppedBlob, "cover.jpg");
+      formDataUpload.append(
+        "upload_preset",
+        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+      );
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formDataUpload,
+        }
+      );
+
+      const data = await response.json();
+
+      setFormData((prev) => ({
+        ...prev,
+        cover_photo: data.secure_url,
+      }));
+
+      setMessage({
+        type: "success",
+        text: "Cover photo uploaded successfully!",
+      });
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to upload cover photo" });
+    } finally {
+      setUploadingCover(false);
+      setTempCoverImage(null);
     }
   };
 
@@ -239,12 +303,6 @@ export default function EditProfilePage() {
     setMessage({ type: "", text: "" });
 
     try {
-      console.log("Saving profile data:", {
-        ...formData,
-        experience,
-        education,
-      });
-
       const { data, error } = await supabase
         .from("profiles")
         .update({
@@ -255,6 +313,7 @@ export default function EditProfilePage() {
           phone: formData.phone,
           linkedin_url: formData.linkedin_url,
           profile_photo: formData.profile_photo,
+          cover_photo: formData.cover_photo,
           skills: formData.skills,
           experience: experience,
           education: education,
@@ -268,7 +327,6 @@ export default function EditProfilePage() {
         throw error;
       }
 
-      console.log("Profile updated successfully:", data);
       setMessage({ type: "success", text: "Profile updated successfully!" });
 
       setTimeout(() => {
@@ -331,37 +389,106 @@ export default function EditProfilePage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Profile Photo */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Profile Photo
-            </h2>
-            <div className="flex items-center space-x-6">
-              {formData.profile_photo ? (
+          {/* Cover Photo Section */}
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="relative h-32 bg-gradient-to-r from-blue-500 to-indigo-600">
+              {formData.cover_photo && (
                 <Image
-                  src={formData.profile_photo}
-                  alt="Profile"
-                  width={96} // adjust accordingly
-                  height={96}
-                  className="w-24 h-24 rounded-full object-cover"
+                  src={formData.cover_photo}
+                  alt="Cover"
+                  fill
+                  className="object-cover"
                 />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-blue-600">
-                  {formData.full_name?.charAt(0) || "U"}
-                </div>
               )}
-              <div>
+              <label className="absolute bottom-4 right-4 cursor-pointer">
+                <div className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition">
+                  <svg
+                    className="w-5 h-5 text-gray-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  className="block w-full text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  onChange={handleCoverImageUpload}
+                  disabled={uploadingCover}
+                  className="hidden"
                 />
-                {uploading && (
-                  <p className="text-sm text-gray-500 mt-2">Uploading...</p>
+              </label>
+              {uploadingCover && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <p className="text-white">Uploading cover...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Photo */}
+            <div className="px-6 pb-6 -mt-16">
+              <div className="relative inline-block">
+                {formData.profile_photo ? (
+                  <Image
+                    src={formData.profile_photo}
+                    alt="Profile"
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 rounded-full border-4 border-white object-cover"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-3xl font-bold text-blue-600">
+                    {formData.full_name?.charAt(0) || "U"}
+                  </div>
                 )}
+                <label className="absolute bottom-0 right-0 cursor-pointer">
+                  <div className="bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition">
+                    <svg
+                      className="w-4 h-4 text-gray-700"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfileImageUpload}
+                    disabled={uploadingProfile}
+                    className="hidden"
+                  />
+                </label>
               </div>
+              {uploadingProfile && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Uploading profile photo...
+                </p>
+              )}
             </div>
           </div>
 
@@ -437,7 +564,7 @@ export default function EditProfilePage() {
                   value={formData.linkedin_url}
                   onChange={handleChange}
                   placeholder="https://linkedin.com/in/yourprofile"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -473,7 +600,7 @@ export default function EditProfilePage() {
               <button
                 type="button"
                 onClick={addSkill}
-                className="px-6 py-2  bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Add
               </button>
@@ -482,7 +609,7 @@ export default function EditProfilePage() {
               {formData.skills.map((skill, index) => (
                 <span
                   key={index}
-                  className="px-4 py-2  bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-2"
                 >
                   {skill}
                   <button
@@ -537,7 +664,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateExperience(index, "title", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -546,7 +673,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateExperience(index, "company", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -555,7 +682,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateExperience(index, "startDate", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -565,11 +692,11 @@ export default function EditProfilePage() {
                         updateExperience(index, "endDate", e.target.value)
                       }
                       disabled={exp.current}
-                      className="px-4 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg disabled:bg-gray-100"
                     />
                   </div>
 
-                  <label className="flex items-center mt-3 text-sm">
+                  <label className="flex items-center mt-3 text-sm text-gray-700">
                     <input
                       type="checkbox"
                       checked={exp.current}
@@ -588,7 +715,7 @@ export default function EditProfilePage() {
                       updateExperience(index, "description", e.target.value)
                     }
                     rows={3}
-                    className="w-full mt-3 px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full mt-3 px-4 py-2 text-black border border-gray-300 rounded-lg"
                   />
                 </div>
               ))}
@@ -635,7 +762,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateEducation(index, "school", e.target.value)
                       }
-                      className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg"
+                      className="col-span-2 px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -644,7 +771,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateEducation(index, "degree", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -653,7 +780,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateEducation(index, "field", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -662,7 +789,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateEducation(index, "startYear", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                     <input
                       type="text"
@@ -671,7 +798,7 @@ export default function EditProfilePage() {
                       onChange={(e) =>
                         updateEducation(index, "endYear", e.target.value)
                       }
-                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
                     />
                   </div>
                 </div>
@@ -697,6 +824,30 @@ export default function EditProfilePage() {
           </div>
         </form>
       </div>
+      {/* Crop Modals */}
+      {showCoverCrop && tempCoverImage && (
+        <ImageCropModal
+          image={tempCoverImage}
+          onComplete={handleCoverCropComplete}
+          onCancel={() => {
+            setShowCoverCrop(false);
+            setTempCoverImage(null);
+          }}
+          aspectRatio={16 / 5}
+        />
+      )}
+
+      {showProfileCrop && tempProfileImage && (
+        <ImageCropModal
+          image={tempProfileImage}
+          onComplete={handleProfileCropComplete}
+          onCancel={() => {
+            setShowProfileCrop(false);
+            setTempProfileImage(null);
+          }}
+          aspectRatio={1}
+        />
+      )}
     </div>
   );
 }

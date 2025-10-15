@@ -113,7 +113,7 @@ export default function PostJobPage() {
                   onChange={handleChange}
                   required
                   placeholder="e.g., Senior Cardiologist"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
 
@@ -128,7 +128,7 @@ export default function PostJobPage() {
                   onChange={handleChange}
                   required
                   placeholder="e.g., Apollo Hospital"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export default function PostJobPage() {
                   onChange={handleChange}
                   required
                   placeholder="e.g., Mumbai, India"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
 
@@ -156,7 +156,7 @@ export default function PostJobPage() {
                     name="job_type"
                     value={formData.job_type}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                   >
                     <option value="full-time">Full Time</option>
                     <option value="part-time">Part Time</option>
@@ -174,7 +174,7 @@ export default function PostJobPage() {
                     name="experience_level"
                     value={formData.experience_level}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                   >
                     <option value="entry">Entry Level</option>
                     <option value="mid">Mid Level</option>
@@ -194,7 +194,7 @@ export default function PostJobPage() {
                   value={formData.salary_range}
                   onChange={handleChange}
                   placeholder="e.g., 15-20 LPA"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function PostJobPage() {
                   required
                   rows={5}
                   placeholder="Describe the role, responsibilities, and what the candidate will be doing..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
 
@@ -232,7 +232,7 @@ export default function PostJobPage() {
                   onChange={handleChange}
                   rows={4}
                   placeholder="List the required qualifications, skills, and experience..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export default function PostJobPage() {
                   onChange={handleChange}
                   rows={4}
                   placeholder="List the benefits, perks, and what makes this opportunity great..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder-gray-400"
                 />
               </div>
             </div>

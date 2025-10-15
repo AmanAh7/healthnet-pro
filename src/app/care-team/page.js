@@ -225,18 +225,18 @@ export default function CareTeamPage() {
               <Link href="/care-team" className="text-blue-600 font-semibold">
                 Care Team
               </Link>
-              <a
-                href="#"
+              <Link
+                href="/jobs"
                 className="text-gray-700 hover:text-blue-600 transition"
               >
                 Jobs
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                href="/messages"
                 className="text-gray-700 hover:text-blue-600 transition"
               >
                 Messages
-              </a>
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"

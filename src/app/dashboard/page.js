@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -35,7 +36,6 @@ export default function DashboardPage() {
           .single();
 
         setProfile(profile);
-
         await loadPosts();
       } catch (error) {
         console.error("Error:", error);
@@ -45,7 +45,7 @@ export default function DashboardPage() {
     };
 
     checkUser();
-  }, [router]); // Add router to dependencies
+  }, [router]);
 
   const loadPosts = async () => {
     try {
@@ -107,15 +107,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header/Navigation */}
-      <header className="bg-white shadow-sm border-b">
+      {/* Header - Mobile Responsive */}
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl md:text-2xl font-bold text-blue-600">
               HealthNet Pro
             </div>
 
-            <nav className="flex items-center space-x-6">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
               <Link
                 href="/dashboard"
                 className="text-gray-700 hover:text-blue-600 transition"
@@ -140,7 +141,6 @@ export default function DashboardPage() {
               >
                 Messages
               </Link>
-
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
@@ -148,15 +148,111 @@ export default function DashboardPage() {
                 Sign Out
               </button>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-700 hover:text-blue-600"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t py-4 space-y-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Home
+              </Link>
+              <Link
+                href="/care-team"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Care Team
+              </Link>
+              <Link
+                href="/jobs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Jobs
+              </Link>
+              <Link
+                href="/messages"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded"
+              >
+                Messages
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Sidebar - Profile Card */}
-          <div className="lg:col-span-1">
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        {/* Mobile Horizontal Profile Bar */}
+        <div className="md:hidden mb-4 bg-white rounded-xl shadow-md p-4 flex items-center space-x-4 overflow-x-auto">
+          <div className="flex-shrink-0">
+            <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-blue-600">
+              {profile?.full_name?.charAt(0) || "U"}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 truncate">
+              {profile?.full_name || "User"}
+            </h3>
+            <p className="text-xs text-gray-600 truncate">
+              {profile?.headline || "Healthcare Professional"}
+            </p>
+          </div>
+          <Link
+            href="/profile"
+            className="flex-shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+          >
+            View
+          </Link>
+        </div>
+
+        {/* Desktop Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left Sidebar - Hidden on mobile, visible on md+ */}
+          <div className="hidden md:block md:col-span-1">
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="h-20 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
 
@@ -201,8 +297,8 @@ export default function DashboardPage() {
             <div className="bg-white rounded-xl shadow-md p-6 mt-6">
               <h3 className="font-bold text-gray-900 mb-4">Quick Access</h3>
               <div className="space-y-3">
-                <a
-                  href="#"
+                <Link
+                  href="/care-team"
                   className="flex items-center text-gray-700 hover:text-blue-600 transition"
                 >
                   <svg
@@ -219,9 +315,9 @@ export default function DashboardPage() {
                     />
                   </svg>
                   My Network
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/jobs"
                   className="flex items-center text-gray-700 hover:text-blue-600 transition"
                 >
                   <svg
@@ -238,9 +334,9 @@ export default function DashboardPage() {
                     />
                   </svg>
                   Job Listings
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/messages"
                   className="flex items-center text-gray-700 hover:text-blue-600 transition"
                 >
                   <svg
@@ -253,17 +349,17 @@ export default function DashboardPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
-                  Learning
-                </a>
+                  Messages
+                </Link>
               </div>
             </div>
           </div>
 
           {/* Main Feed */}
-          <div className="lg:col-span-2">
+          <div className="md:col-span-2">
             <CreatePost
               user={user}
               profile={profile}
@@ -271,7 +367,7 @@ export default function DashboardPage() {
             />
 
             {posts.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-md p-12 text-center">
+              <div className="bg-white rounded-xl shadow-md p-8 md:p-12 text-center">
                 <p className="text-gray-500">
                   No posts yet. Be the first to share something!
                 </p>
