@@ -20,20 +20,28 @@ export default function EditProfilePage() {
   const [tempCoverImage, setTempCoverImage] = useState(null);
   const [tempProfileImage, setTempProfileImage] = useState(null);
 
-  // Form state
+  // Form state - Healthcare Professional Fields
   const [formData, setFormData] = useState({
     full_name: "",
     headline: "",
     bio: "",
     location: "",
-    phone: "",
-    linkedin_url: "",
+    phone_number: "",
+    email: "",
     profile_photo: "",
     cover_photo: "",
     skills: [],
+    // Healthcare-specific fields
+    license_number: "",
+    specialization: "",
+    highest_qualification: "",
+    years_of_experience: "",
+    current_workplace: "",
+    certifications: [],
   });
 
   const [skillInput, setSkillInput] = useState("");
+  const [certificationInput, setCertificationInput] = useState("");
   const [experience, setExperience] = useState([]);
   const [education, setEducation] = useState([]);
 
@@ -94,11 +102,17 @@ export default function EditProfilePage() {
             headline: "",
             bio: "",
             location: "",
-            phone: "",
-            linkedin_url: "",
+            phone_number: "",
+            email: newProfile.email || "",
             profile_photo: "",
             cover_photo: "",
             skills: [],
+            license_number: "",
+            specialization: "",
+            highest_qualification: "",
+            years_of_experience: "",
+            current_workplace: "",
+            certifications: [],
           });
         }
       } else {
@@ -107,11 +121,17 @@ export default function EditProfilePage() {
           headline: profile.headline || "",
           bio: profile.bio || "",
           location: profile.location || "",
-          phone: profile.phone || "",
-          linkedin_url: profile.linkedin_url || "",
+          phone_number: profile.phone_number || "",
+          email: profile.email || "",
           profile_photo: profile.profile_photo || "",
           cover_photo: profile.cover_photo || "",
           skills: profile.skills || [],
+          license_number: profile.license_number || "",
+          specialization: profile.specialization || "",
+          highest_qualification: profile.highest_qualification || "",
+          years_of_experience: profile.years_of_experience || "",
+          current_workplace: profile.current_workplace || "",
+          certifications: profile.certifications || [],
         });
         setExperience(profile.experience || []);
         setEducation(profile.education || []);
@@ -250,6 +270,28 @@ export default function EditProfilePage() {
     });
   };
 
+  const addCertification = () => {
+    if (
+      certificationInput.trim() &&
+      !formData.certifications.includes(certificationInput.trim())
+    ) {
+      setFormData({
+        ...formData,
+        certifications: [...formData.certifications, certificationInput.trim()],
+      });
+      setCertificationInput("");
+    }
+  };
+
+  const removeCertification = (certToRemove) => {
+    setFormData({
+      ...formData,
+      certifications: formData.certifications.filter(
+        (cert) => cert !== certToRemove
+      ),
+    });
+  };
+
   const addExperience = () => {
     setExperience([
       ...experience,
@@ -310,11 +352,19 @@ export default function EditProfilePage() {
           headline: formData.headline,
           bio: formData.bio,
           location: formData.location,
-          phone: formData.phone,
-          linkedin_url: formData.linkedin_url,
+          phone_number: formData.phone_number,
+          email: formData.email,
           profile_photo: formData.profile_photo,
           cover_photo: formData.cover_photo,
           skills: formData.skills,
+          license_number: formData.license_number,
+          specialization: formData.specialization,
+          highest_qualification: formData.highest_qualification,
+          years_of_experience: formData.years_of_experience
+            ? parseInt(formData.years_of_experience)
+            : null,
+          current_workplace: formData.current_workplace,
+          certifications: formData.certifications,
           experience: experience,
           education: education,
           updated_at: new Date().toISOString(),
@@ -330,7 +380,7 @@ export default function EditProfilePage() {
       setMessage({ type: "success", text: "Profile updated successfully!" });
 
       setTimeout(() => {
-        router.push("/profile");
+        router.push(`/profile/${user.id}`);
         router.refresh();
       }, 1500);
     } catch (error) {
@@ -362,7 +412,7 @@ export default function EditProfilePage() {
               HealthNet Pro
             </Link>
             <Link
-              href="/profile"
+              href={`/profile/${user?.id}`}
               className="text-gray-600 hover:text-blue-600 transition"
             >
               ← Cancel
@@ -498,18 +548,34 @@ export default function EditProfilePage() {
               Basic Information
             </h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
 
               <div>
@@ -526,44 +592,150 @@ export default function EditProfilePage() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    placeholder="e.g., Mumbai, India"
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone_number"
+                    value={formData.phone_number}
+                    onChange={handleChange}
+                    placeholder="+91 9876543210"
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Healthcare Professional Info */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Professional Credentials
+            </h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    License/Registration Number
+                  </label>
+                  <input
+                    type="text"
+                    name="license_number"
+                    value={formData.license_number}
+                    onChange={handleChange}
+                    placeholder="e.g., MCI-12345"
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Specialization/Department
+                  </label>
+                  <select
+                    name="specialization"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select specialization</option>
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Emergency Medicine">
+                      Emergency Medicine
+                    </option>
+                    <option value="ICU/Critical Care">ICU/Critical Care</option>
+                    <option value="Surgery">Surgery</option>
+                    <option value="Nursing">Nursing</option>
+                    <option value="Lab Technician">Lab Technician</option>
+                    <option value="Radiology">Radiology</option>
+                    <option value="Pharmacy">Pharmacy</option>
+                    <option value="Physiotherapy">Physiotherapy</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Highest Qualification
+                  </label>
+                  <select
+                    name="highest_qualification"
+                    value={formData.highest_qualification}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select qualification</option>
+                    <option value="MBBS">MBBS</option>
+                    <option value="MD">MD</option>
+                    <option value="MS">MS</option>
+                    <option value="DNB">DNB</option>
+                    <option value="DM">DM</option>
+                    <option value="MCh">MCh</option>
+                    <option value="BSc Nursing">BSc Nursing</option>
+                    <option value="MSc Nursing">MSc Nursing</option>
+                    <option value="GNM">
+                      GNM (General Nursing & Midwifery)
+                    </option>
+                    <option value="BPT">BPT (Physiotherapy)</option>
+                    <option value="MPT">MPT (Physiotherapy)</option>
+                    <option value="B.Pharm">B.Pharm</option>
+                    <option value="M.Pharm">M.Pharm</option>
+                    <option value="DMLT">DMLT (Lab Technician)</option>
+                    <option value="BMLT">BMLT (Lab Technician)</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Years of Experience
+                  </label>
+                  <input
+                    type="number"
+                    name="years_of_experience"
+                    value={formData.years_of_experience}
+                    onChange={handleChange}
+                    placeholder="e.g., 5"
+                    min="0"
+                    max="50"
+                    className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
+                  Current Hospital/Clinic
                 </label>
                 <input
                   type="text"
-                  name="location"
-                  value={formData.location}
+                  name="current_workplace"
+                  value={formData.current_workplace}
                   onChange={handleChange}
-                  placeholder="e.g., Mumbai, India"
-                  className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+91 1234567890"
-                  className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  LinkedIn Profile URL
-                </label>
-                <input
-                  type="url"
-                  name="linkedin_url"
-                  value={formData.linkedin_url}
-                  onChange={handleChange}
-                  placeholder="https://linkedin.com/in/yourprofile"
+                  placeholder="e.g., Apollo Hospital, AIIMS"
                   className="w-full px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -583,6 +755,49 @@ export default function EditProfilePage() {
             />
           </div>
 
+          {/* Certifications */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Certifications
+            </h2>
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={certificationInput}
+                onChange={(e) => setCertificationInput(e.target.value)}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addCertification())
+                }
+                placeholder="e.g., BLS, ACLS, ICU Certified"
+                className="flex-1 px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={addCertification}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.certifications.map((cert, index) => (
+                <span
+                  key={index}
+                  className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium flex items-center gap-2"
+                >
+                  {cert}
+                  <button
+                    type="button"
+                    onClick={() => removeCertification(cert)}
+                    className="text-yellow-700 hover:text-yellow-900"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
           {/* Skills */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Skills</h2>
@@ -594,7 +809,7 @@ export default function EditProfilePage() {
                 onKeyPress={(e) =>
                   e.key === "Enter" && (e.preventDefault(), addSkill())
                 }
-                placeholder="Add a skill (e.g., Patient Care)"
+                placeholder="Add a skill (e.g., Patient Care, Emergency Response)"
                 className="flex-1 px-4 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <button
@@ -620,104 +835,6 @@ export default function EditProfilePage() {
                     ×
                   </button>
                 </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Experience */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Experience</h2>
-              <button
-                type="button"
-                onClick={addExperience}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-              >
-                + Add Experience
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {experience.map((exp, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">
-                      Experience {index + 1}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => removeExperience(index)}
-                      className="text-red-600 hover:text-red-700 text-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Job Title"
-                      value={exp.title}
-                      onChange={(e) =>
-                        updateExperience(index, "title", e.target.value)
-                      }
-                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Company"
-                      value={exp.company}
-                      onChange={(e) =>
-                        updateExperience(index, "company", e.target.value)
-                      }
-                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Start Date (e.g., Jan 2020)"
-                      value={exp.startDate}
-                      onChange={(e) =>
-                        updateExperience(index, "startDate", e.target.value)
-                      }
-                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      placeholder="End Date"
-                      value={exp.endDate}
-                      onChange={(e) =>
-                        updateExperience(index, "endDate", e.target.value)
-                      }
-                      disabled={exp.current}
-                      className="px-4 py-2 text-black border border-gray-300 rounded-lg disabled:bg-gray-100"
-                    />
-                  </div>
-
-                  <label className="flex items-center mt-3 text-sm text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={exp.current}
-                      onChange={(e) =>
-                        updateExperience(index, "current", e.target.checked)
-                      }
-                      className="mr-2"
-                    />
-                    I currently work here
-                  </label>
-
-                  <textarea
-                    placeholder="Description (optional)"
-                    value={exp.description}
-                    onChange={(e) =>
-                      updateExperience(index, "description", e.target.value)
-                    }
-                    rows={3}
-                    className="w-full mt-3 px-4 py-2 text-black border border-gray-300 rounded-lg"
-                  />
-                </div>
               ))}
             </div>
           </div>
@@ -806,6 +923,104 @@ export default function EditProfilePage() {
             </div>
           </div>
 
+          {/* Experience */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Experience</h2>
+              <button
+                type="button"
+                onClick={addExperience}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                + Add Experience
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {experience.map((exp, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <div className="flex justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900">
+                      Experience {index + 1}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => removeExperience(index)}
+                      className="text-red-600 hover:text-red-700 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Job Title"
+                      value={exp.title}
+                      onChange={(e) =>
+                        updateExperience(index, "title", e.target.value)
+                      }
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Hospital/Clinic"
+                      value={exp.company}
+                      onChange={(e) =>
+                        updateExperience(index, "company", e.target.value)
+                      }
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Start Date (e.g., Jan 2020)"
+                      value={exp.startDate}
+                      onChange={(e) =>
+                        updateExperience(index, "startDate", e.target.value)
+                      }
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      placeholder="End Date"
+                      value={exp.endDate}
+                      onChange={(e) =>
+                        updateExperience(index, "endDate", e.target.value)
+                      }
+                      disabled={exp.current}
+                      className="px-4 py-2 text-black border border-gray-300 rounded-lg disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <label className="flex items-center mt-3 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={exp.current}
+                      onChange={(e) =>
+                        updateExperience(index, "current", e.target.checked)
+                      }
+                      className="mr-2"
+                    />
+                    I currently work here
+                  </label>
+
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={exp.description}
+                    onChange={(e) =>
+                      updateExperience(index, "description", e.target.value)
+                    }
+                    rows={3}
+                    className="w-full mt-3 px-4 py-2 text-black border border-gray-300 rounded-lg"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Submit Button */}
           <div className="flex gap-4">
             <button
@@ -816,7 +1031,7 @@ export default function EditProfilePage() {
               {saving ? "Saving..." : "Save Profile"}
             </button>
             <Link
-              href="/profile"
+              href={`/profile/${user?.id}`}
               className="px-8 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-center"
             >
               Cancel
@@ -824,6 +1039,7 @@ export default function EditProfilePage() {
           </div>
         </form>
       </div>
+
       {/* Crop Modals */}
       {showCoverCrop && tempCoverImage && (
         <ImageCropModal

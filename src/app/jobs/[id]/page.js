@@ -13,13 +13,32 @@ export default function JobDetailsPage() {
   const jobId = params.id;
 
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [job, setJob] = useState(null);
   const [hasApplied, setHasApplied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
-  const [coverLetter, setCoverLetter] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Form state - Healthcare focused
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    licenseNumber: "",
+    specialization: "",
+    yearsOfExperience: "",
+    currentWorkplace: "",
+    highestQualification: "",
+    resumeUrl: "",
+    coverLetter: "",
+    availableFrom: "",
+    expectedSalary: "",
+    certifications: "",
+  });
+
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   useEffect(() => {
     const loadJob = async () => {
@@ -34,6 +53,32 @@ export default function JobDetailsPage() {
         }
 
         setUser(user);
+
+        // Load user profile
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        setProfile(profileData);
+
+        // Pre-fill form with profile data
+        setFormData({
+          fullName: profileData?.full_name || "",
+          email: profileData?.email || user.email || "",
+          phoneNumber: profileData?.phone_number || "",
+          licenseNumber: "",
+          specialization: profileData?.specialization || "",
+          yearsOfExperience: "",
+          currentWorkplace: "",
+          highestQualification: profileData?.highest_qualification || "",
+          resumeUrl: "",
+          coverLetter: "",
+          availableFrom: "",
+          expectedSalary: "",
+          certifications: "",
+        });
 
         const { data: jobData, error } = await supabase
           .from("jobs")
@@ -67,16 +112,115 @@ export default function JobDetailsPage() {
     loadJob();
   }, [jobId, router]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Please upload a PDF or Word document");
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size should be less than 5MB");
+      return;
+    }
+
+    setUploadingResume(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `resumes/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("documents").getPublicUrl(filePath);
+
+      setFormData((prev) => ({
+        ...prev,
+        resumeUrl: publicUrl,
+      }));
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      alert("Failed to upload resume. Please try again.");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
   const handleApply = async (e) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!formData.phoneNumber) {
+      alert("Phone number is required");
+      return;
+    }
+    if (!formData.licenseNumber) {
+      alert("Medical license/registration number is required");
+      return;
+    }
+    if (!formData.specialization) {
+      alert("Specialization/Department is required");
+      return;
+    }
+    if (!formData.yearsOfExperience) {
+      alert("Years of experience is required");
+      return;
+    }
+    if (!formData.highestQualification) {
+      alert("Highest qualification is required");
+      return;
+    }
+    if (!formData.resumeUrl) {
+      alert("Please upload your resume/CV");
+      return;
+    }
+
     setApplying(true);
 
     try {
+      const certificationsArray = formData.certifications
+        ? formData.certifications.split(",").map((cert) => cert.trim())
+        : [];
+
       const { error } = await supabase.from("job_applications").insert([
         {
           job_id: jobId,
           applicant_id: user.id,
-          cover_letter: coverLetter,
+          phone_number: formData.phoneNumber,
+          license_number: formData.licenseNumber,
+          specialization: formData.specialization,
+          years_of_experience: parseInt(formData.yearsOfExperience),
+          current_workplace: formData.currentWorkplace,
+          highest_qualification: formData.highestQualification,
+          resume_url: formData.resumeUrl,
+          cover_letter: formData.coverLetter,
+          available_from: formData.availableFrom || null,
+          expected_salary: formData.expectedSalary,
+          certifications: certificationsArray,
         },
       ]);
 
@@ -84,10 +228,10 @@ export default function JobDetailsPage() {
 
       setHasApplied(true);
       setShowApplyForm(false);
-      setCoverLetter("");
+      alert("Application submitted successfully!");
     } catch (error) {
       console.error("Error applying:", error);
-      alert("Failed to submit application");
+      alert("Failed to submit application. Please try again.");
     } finally {
       setApplying(false);
     }
@@ -137,7 +281,6 @@ export default function JobDetailsPage() {
               HealthNet Pro
             </Link>
 
-            {/* Desktop Navigation */}
             <Link
               href="/jobs"
               className="hidden md:block text-gray-600 hover:text-blue-600 transition"
@@ -145,7 +288,6 @@ export default function JobDetailsPage() {
               Back to Jobs
             </Link>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-gray-700 hover:text-blue-600"
@@ -175,7 +317,6 @@ export default function JobDetailsPage() {
             </button>
           </div>
 
-          {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t py-4 space-y-2">
               <Link
@@ -256,37 +397,353 @@ export default function JobDetailsPage() {
             )}
           </div>
 
-          {/* Apply Form */}
+          {/* Healthcare Professional Application Form */}
           {showApplyForm && (
-            <div className="border-t pt-4 md:pt-6 mb-6">
-              <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4">
-                Submit Application
-              </h3>
-              <form onSubmit={handleApply}>
-                <div className="mb-4">
+            <div className="border-t pt-4 md:pt-6 mb-6 bg-gray-50 p-4 md:p-6 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg md:text-xl font-bold text-gray-900">
+                  Submit Application
+                </h3>
+                <button
+                  onClick={() => setShowApplyForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleApply} className="space-y-4">
+                {/* Full Name & Email - Read Only */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      readOnly
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      readOnly
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Number & License Number */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      placeholder="+91 9876543210"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      License/Registration No.{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="licenseNumber"
+                      value={formData.licenseNumber}
+                      onChange={handleInputChange}
+                      placeholder="e.g., MCI-12345 or NMC-67890"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Specialization & Years of Experience */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Specialization/Department{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="specialization"
+                      value={formData.specialization}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    >
+                      <option value="">Select specialization</option>
+                      <option value="General Medicine">General Medicine</option>
+                      <option value="Cardiology">Cardiology</option>
+                      <option value="Neurology">Neurology</option>
+                      <option value="Pediatrics">Pediatrics</option>
+                      <option value="Orthopedics">Orthopedics</option>
+                      <option value="Emergency Medicine">
+                        Emergency Medicine
+                      </option>
+                      <option value="ICU/Critical Care">
+                        ICU/Critical Care
+                      </option>
+                      <option value="Surgery">Surgery</option>
+                      <option value="Nursing">Nursing</option>
+                      <option value="Lab Technician">Lab Technician</option>
+                      <option value="Radiology">Radiology</option>
+                      <option value="Pharmacy">Pharmacy</option>
+                      <option value="Physiotherapy">Physiotherapy</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Years of Experience{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="yearsOfExperience"
+                      value={formData.yearsOfExperience}
+                      onChange={handleInputChange}
+                      placeholder="5"
+                      min="0"
+                      max="50"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Current Workplace & Highest Qualification */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Current Hospital/Clinic (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="currentWorkplace"
+                      value={formData.currentWorkplace}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Apollo Hospital, AIIMS"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Highest Qualification{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="highestQualification"
+                      value={formData.highestQualification}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    >
+                      <option value="">Select qualification</option>
+                      <option value="MBBS">MBBS</option>
+                      <option value="MD">MD</option>
+                      <option value="MS">MS</option>
+                      <option value="DNB">DNB</option>
+                      <option value="DM">DM</option>
+                      <option value="MCh">MCh</option>
+                      <option value="BSc Nursing">BSc Nursing</option>
+                      <option value="MSc Nursing">MSc Nursing</option>
+                      <option value="GNM">
+                        GNM (General Nursing & Midwifery)
+                      </option>
+                      <option value="BPT">BPT (Physiotherapy)</option>
+                      <option value="MPT">MPT (Physiotherapy)</option>
+                      <option value="B.Pharm">B.Pharm</option>
+                      <option value="M.Pharm">M.Pharm</option>
+                      <option value="DMLT">DMLT (Lab Technician)</option>
+                      <option value="BMLT">BMLT (Lab Technician)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Resume Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Resume/CV <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition bg-white">
+                        <svg
+                          className="w-5 h-5 text-gray-400 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        <span className="text-sm text-gray-600">
+                          {uploadingResume
+                            ? "Uploading..."
+                            : formData.resumeUrl
+                            ? "✓ Resume Uploaded"
+                            : "Click to Upload Resume (PDF/DOC - Max 5MB)"}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeUpload}
+                        disabled={uploadingResume}
+                        className="hidden"
+                      />
+                    </label>
+                    {formData.resumeUrl && (
+                      <a
+                        href={formData.resumeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-semibold border border-blue-600 rounded-lg"
+                      >
+                        View
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Certifications */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Certifications (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="certifications"
+                    value={formData.certifications}
+                    onChange={handleInputChange}
+                    placeholder="e.g., BLS, ACLS, ICU Certified, Trauma Care"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Separate multiple certifications with commas
+                  </p>
+                </div>
+
+                {/* Available From & Expected Salary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Available to Join (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      name="availableFrom"
+                      value={formData.availableFrom}
+                      onChange={handleInputChange}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Expected Salary (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="expectedSalary"
+                      value={formData.expectedSalary}
+                      onChange={handleInputChange}
+                      placeholder="e.g., ₹50,000 - ₹70,000/month"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Cover Letter */}
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Cover Letter (Optional)
                   </label>
                   <textarea
-                    value={coverLetter}
-                    onChange={(e) => setCoverLetter(e.target.value)}
+                    name="coverLetter"
+                    value={formData.coverLetter}
+                    onChange={handleInputChange}
                     rows={5}
-                    placeholder="Tell the employer why you're a great fit for this role..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm md:text-base text-gray-900 placeholder-gray-400"
+                    placeholder="Why are you interested in this position? What makes you a great fit?"
+                    maxLength={2000}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 placeholder-gray-400"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.coverLetter.length}/2000 characters
+                  </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+
+                {/* Submit Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
                   <button
                     type="submit"
-                    disabled={applying}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm md:text-base"
+                    disabled={applying || uploadingResume}
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm md:text-base"
                   >
-                    {applying ? "Submitting..." : "Submit Application"}
+                    {applying ? (
+                      <span className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Submitting...
+                      </span>
+                    ) : (
+                      "Submit Application"
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowApplyForm(false)}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base"
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold text-sm md:text-base"
                   >
                     Cancel
                   </button>
@@ -329,7 +786,7 @@ export default function JobDetailsPage() {
             </div>
           )}
 
-          {/* Posted By - WITH PROFILE PHOTO */}
+          {/* Posted By */}
           <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
             <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
               Posted By
@@ -338,7 +795,6 @@ export default function JobDetailsPage() {
               href={`/profile/${job.employer_id}`}
               className="flex items-center space-x-3 md:space-x-4 hover:bg-gray-50 p-3 rounded-lg transition"
             >
-              {/* Profile Photo with Image Support */}
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
                 {job.profiles?.profile_photo ? (
                   <Image

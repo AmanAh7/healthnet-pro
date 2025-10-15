@@ -87,7 +87,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - Mobile Responsive */}
+      {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -97,16 +97,12 @@ export default function UserProfilePage() {
             >
               HealthNet Pro
             </Link>
-
-            {/* Desktop Navigation */}
             <Link
               href="/dashboard"
               className="hidden md:block text-gray-600 hover:text-blue-600 transition"
             >
               Back to Dashboard
             </Link>
-
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-gray-700 hover:text-blue-600"
@@ -135,8 +131,6 @@ export default function UserProfilePage() {
               </svg>
             </button>
           </div>
-
-          {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t py-4 space-y-2">
               <Link
@@ -155,7 +149,7 @@ export default function UserProfilePage() {
       <div className="container mx-auto px-4 py-4 md:py-8 max-w-4xl">
         {/* Profile Header Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-          {/* Cover Image - Responsive Height */}
+          {/* Cover Image */}
           <div className="h-24 md:h-32 bg-gradient-to-r from-blue-500 to-indigo-600 relative overflow-hidden">
             {profile?.cover_photo && (
               <Image
@@ -168,67 +162,123 @@ export default function UserProfilePage() {
             )}
           </div>
 
-          {/* Profile Info - Mobile Responsive */}
-          <div className="px-4 md:px-8 pb-4 md:pb-8">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-start -mt-12 md:-mt-16">
-              <div className="flex flex-col md:flex-row md:items-end md:space-x-4">
-                {/* Profile Photo - Responsive Size */}
-                <div className="relative mb-3 md:mb-0">
-                  {profile?.profile_photo ? (
-                    <Image
-                      src={profile.profile_photo}
-                      alt={profile.full_name}
-                      width={128}
-                      height={128}
-                      className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white object-cover"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-3xl md:text-4xl font-bold text-blue-600">
-                      {profile?.full_name?.charAt(0) || "U"}
-                    </div>
-                  )}
-                </div>
+          {/* Info & Actions */}
+          <div className="px-4 md:px-8 pb-6 pt-2 md:pt-4">
+            {/* Profile Photo - Centered */}
+            <div className="flex flex-col items-center md:items-start -mt-12 md:-mt-16 mb-4">
+              <div className="relative z-10">
+                {profile?.profile_photo ? (
+                  <Image
+                    src={profile.profile_photo}
+                    alt={profile.full_name}
+                    width={128}
+                    height={128}
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white object-cover"
+                  />
+                ) : (
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center text-3xl md:text-4xl font-bold text-blue-600">
+                    {profile?.full_name?.charAt(0) || "U"}
+                  </div>
+                )}
+              </div>
+            </div>
 
-                {/* Name and headline - Mobile Optimized */}
-                <div className="md:pb-2">
-                  <h1 className="text-xl md:text-3xl font-bold text-gray-900">
-                    {profile?.full_name || "User Name"}
-                  </h1>
-                  <p className="text-sm md:text-base text-gray-600 mt-1">
-                    {profile?.headline || "Healthcare Professional"}
-                  </p>
-                  <p className="text-xs md:text-sm text-gray-500 mt-1 capitalize">
-                    {profile?.user_type} •{" "}
-                    {profile?.location || "Location not set"}
-                  </p>
+            {/* Name, Info, and Action Buttons Container */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+              {/* Name and Info */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+                  {profile?.full_name || "User Name"}
+                </h1>
+                <p className="text-sm md:text-base text-gray-600 mt-1">
+                  {profile?.headline || "Healthcare Professional"}
+                </p>
+                <p className="text-xs md:text-sm text-gray-500 mt-1 capitalize">
+                  {profile?.user_type}
+                  {profile?.location && <> • {profile.location}</>}
+                </p>
+
+                {/* Medical-specific badges */}
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-3">
+                  {profile?.license_number && (
+                    <span className="px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded font-semibold">
+                      License: {profile.license_number}
+                    </span>
+                  )}
+                  {profile?.specialization && (
+                    <span className="px-3 py-1 text-xs bg-green-50 text-green-800 rounded font-semibold">
+                      Specialty: {profile.specialization}
+                    </span>
+                  )}
+                  {profile?.highest_qualification && (
+                    <span className="px-3 py-1 text-xs bg-purple-50 text-purple-800 rounded font-semibold">
+                      {profile.highest_qualification}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Buttons - Mobile Responsive Layout */}
-              {isOwnProfile ? (
-                <Link
-                  href="/profile/edit"
-                  className="mt-4 md:mt-4 w-full md:w-auto px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center text-sm md:text-base font-semibold"
-                >
-                  Edit Profile
-                </Link>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 mt-4 w-full md:w-auto">
-                  <div className="flex-1 sm:flex-none">
+              {/* Action Buttons - Always Visible */}
+              <div className="flex-shrink-0">
+                {isOwnProfile ? (
+                  <Link
+                    href="/profile/edit"
+                    className="block w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center text-sm md:text-base font-semibold"
+                  >
+                    Edit Profile
+                  </Link>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                     <CareTeamButton
                       currentUserId={currentUser.id}
                       profileUserId={userId}
                     />
-                  </div>
-                  <div className="flex-1 sm:flex-none">
                     <MessageButton
                       currentUserId={currentUser.id}
                       otherUserId={userId}
                     />
                   </div>
-                </div>
+                )}
+              </div>
+            </div>
+
+            {/* Additional Professional Info */}
+            <div className="flex flex-wrap items-center gap-4 mt-6 justify-center md:justify-start">
+              {profile?.years_of_experience && (
+                <span className="text-sm bg-gray-100 rounded px-3 py-1 font-medium text-gray-700">
+                  {profile.years_of_experience} yrs experience
+                </span>
+              )}
+              {profile?.current_workplace && (
+                <span className="text-sm bg-gray-100 rounded px-3 py-1 font-medium text-gray-700">
+                  {profile.current_workplace}
+                </span>
+              )}
+              {profile?.phone_number && (
+                <span className="text-sm text-gray-600">
+                  📞 {profile.phone_number}
+                </span>
+              )}
+              {profile?.email && (
+                <span className="text-sm text-gray-600 break-all">
+                  ✉️ {profile.email}
+                </span>
               )}
             </div>
+
+            {/* Certifications */}
+            {profile?.certifications && profile.certifications.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
+                {profile.certifications.map((cert, i) => (
+                  <span
+                    key={i}
+                    className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold"
+                  >
+                    {cert}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -244,58 +294,6 @@ export default function UserProfilePage() {
           ) : (
             <p className="text-sm md:text-base text-gray-400 italic">
               No bio added yet.
-            </p>
-          )}
-        </div>
-
-        {/* Experience Section */}
-        <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
-          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
-            Experience
-          </h2>
-          {profile?.experience && profile.experience.length > 0 ? (
-            <div className="space-y-4 md:space-y-6">
-              {profile.experience.map((exp, index) => (
-                <div key={index} className="flex space-x-3 md:space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 md:w-6 md:h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base md:text-lg font-bold text-gray-900">
-                      {exp.title}
-                    </h3>
-                    <p className="text-sm md:text-base text-gray-600">
-                      {exp.company}
-                    </p>
-                    <p className="text-xs md:text-sm text-gray-500 mt-1">
-                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
-                    </p>
-                    {exp.description && (
-                      <p className="text-sm md:text-base text-gray-700 mt-2">
-                        {exp.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm md:text-base text-gray-400 italic">
-              No experience added yet.
             </p>
           )}
         </div>
@@ -349,6 +347,58 @@ export default function UserProfilePage() {
           ) : (
             <p className="text-sm md:text-base text-gray-400 italic">
               No education added yet.
+            </p>
+          )}
+        </div>
+
+        {/* Experience Section */}
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            Experience
+          </h2>
+          {profile?.experience && profile.experience.length > 0 ? (
+            <div className="space-y-4 md:space-y-6">
+              {profile.experience.map((exp, index) => (
+                <div key={index} className="flex space-x-3 md:space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 md:w-6 md:h-6 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900">
+                      {exp.title}
+                    </h3>
+                    <p className="text-sm md:text-base text-gray-600">
+                      {exp.company}
+                    </p>
+                    <p className="text-xs md:text-sm text-gray-500 mt-1">
+                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                    </p>
+                    {exp.description && (
+                      <p className="text-sm md:text-base text-gray-700 mt-2">
+                        {exp.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm md:text-base text-gray-400 italic">
+              No experience added yet.
             </p>
           )}
         </div>

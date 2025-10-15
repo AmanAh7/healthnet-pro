@@ -1,44 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function CareTeamButton({ currentUserId, profileUserId }) {
-  const [status, setStatus] = useState(null);
+  const [isInCareTeam, setIsInCareTeam] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [connectionId, setConnectionId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [relationId, setRelationId] = useState(null);
 
   useEffect(() => {
-    const checkCareTeamStatus = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("care_team")
-          .select("*")
-          .or(
-            `and(requester_id.eq.${currentUserId},receiver_id.eq.${profileUserId}),and(requester_id.eq.${profileUserId},receiver_id.eq.${currentUserId})`
-          )
-          .maybeSingle();
-
-        if (error && error.code !== "PGRST116") throw error;
-
-        if (data) {
-          setStatus(data.status);
-          setRelationId(data.id);
-        } else {
-          setStatus(null);
-        }
-      } catch (error) {
-        console.error("Error checking care team status:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     checkCareTeamStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId, profileUserId]);
 
+  const checkCareTeamStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("care_team")
+        .select("id, status, requester_id")
+        .or(
+          `and(requester_id.eq.${currentUserId},receiver_id.eq.${profileUserId}),and(requester_id.eq.${profileUserId},receiver_id.eq.${currentUserId})`
+        )
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        if (data.status === "accepted") {
+          setIsInCareTeam(true);
+          setConnectionId(data.id);
+        } else if (data.status === "pending") {
+          setIsPending(true);
+          setConnectionId(data.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking care team status:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddToCareTeam = async () => {
-    setLoading(true);
     try {
       const { error } = await supabase.from("care_team").insert([
         {
@@ -49,60 +53,63 @@ export default function CareTeamButton({ currentUserId, profileUserId }) {
       ]);
 
       if (error) throw error;
-      setStatus("pending");
+      setIsPending(true);
+      alert("Connection request sent!");
     } catch (error) {
       console.error("Error sending request:", error);
-    } finally {
-      setLoading(false);
+      alert("Failed to send request");
     }
   };
 
-  const handleRemove = async () => {
-    if (!confirm("Remove from Care Team?")) return;
+  const handleRemoveFromCareTeam = async () => {
+    if (!confirm("Remove this person from your Care Team?")) return;
 
-    setLoading(true);
     try {
       const { error } = await supabase
         .from("care_team")
         .delete()
-        .eq("id", relationId);
+        .eq("id", connectionId);
 
       if (error) throw error;
-      setStatus(null);
-      setRelationId(null);
+      setIsInCareTeam(false);
+      setIsPending(false);
+      setConnectionId(null);
+      alert("Removed from Care Team");
     } catch (error) {
-      console.error("Error removing from care team:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error removing connection:", error);
+      alert("Failed to remove connection");
     }
   };
 
   if (loading) {
     return (
-      <button className="mt-4 px-6 py-2 bg-gray-300 text-white rounded-lg cursor-not-allowed">
+      <button
+        disabled
+        className="w-full px-6 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm md:text-base font-semibold"
+      >
         Loading...
       </button>
     );
   }
 
-  if (status === "accepted") {
+  if (isInCareTeam) {
     return (
       <button
-        onClick={handleRemove}
-        className="mt-4 px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+        onClick={handleRemoveFromCareTeam}
+        className="w-full px-6 py-2 bg-white border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 transition text-sm md:text-base font-semibold whitespace-nowrap"
       >
-        Remove from Care Team
+        Remove Care Team
       </button>
     );
   }
 
-  if (status === "pending") {
+  if (isPending) {
     return (
       <button
-        onClick={handleRemove}
-        className="mt-4 px-6 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+        disabled
+        className="w-full px-6 py-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed text-sm md:text-base font-semibold"
       >
-        Care Team Request Sent
+        Request Pending
       </button>
     );
   }
@@ -110,7 +117,7 @@ export default function CareTeamButton({ currentUserId, profileUserId }) {
   return (
     <button
       onClick={handleAddToCareTeam}
-      className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+      className="w-full px-6 py-2 bg-white border-2 border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition text-sm md:text-base font-semibold whitespace-nowrap"
     >
       Add to Care Team
     </button>
