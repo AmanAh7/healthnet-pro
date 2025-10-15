@@ -21,7 +21,6 @@ export default function JobDetailsPage() {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Form state - Healthcare focused
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -31,7 +30,7 @@ export default function JobDetailsPage() {
     yearsOfExperience: "",
     currentWorkplace: "",
     highestQualification: "",
-    resumeUrl: "",
+    resumePath: "", // Changed from resumeUrl to resumePath
     coverLetter: "",
     availableFrom: "",
     expectedSalary: "",
@@ -54,7 +53,6 @@ export default function JobDetailsPage() {
 
         setUser(user);
 
-        // Load user profile
         const { data: profileData } = await supabase
           .from("profiles")
           .select("*")
@@ -63,7 +61,6 @@ export default function JobDetailsPage() {
 
         setProfile(profileData);
 
-        // Pre-fill form with profile data
         setFormData({
           fullName: profileData?.full_name || "",
           email: profileData?.email || user.email || "",
@@ -73,7 +70,7 @@ export default function JobDetailsPage() {
           yearsOfExperience: "",
           currentWorkplace: "",
           highestQualification: profileData?.highest_qualification || "",
-          resumeUrl: "",
+          resumePath: "",
           coverLetter: "",
           availableFrom: "",
           expectedSalary: "",
@@ -124,7 +121,6 @@ export default function JobDetailsPage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = [
       "application/pdf",
       "application/msword",
@@ -135,7 +131,6 @@ export default function JobDetailsPage() {
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       alert("File size should be less than 5MB");
       return;
@@ -146,21 +141,18 @@ export default function JobDetailsPage() {
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `resumes/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("documents")
+        .from("resumes")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("documents").getPublicUrl(filePath);
-
+      // Store the path, not the URL
       setFormData((prev) => ({
         ...prev,
-        resumeUrl: publicUrl,
+        resumePath: filePath,
       }));
     } catch (error) {
       console.error("Error uploading resume:", error);
@@ -170,10 +162,26 @@ export default function JobDetailsPage() {
     }
   };
 
+  const handleViewResume = async () => {
+    if (!formData.resumePath) return;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("resumes")
+        .createSignedUrl(formData.resumePath, 3600); // 1 hour expiry
+
+      if (error) throw error;
+
+      window.open(data.signedUrl, "_blank");
+    } catch (error) {
+      console.error("Error viewing resume:", error);
+      alert("Failed to load resume");
+    }
+  };
+
   const handleApply = async (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.phoneNumber) {
       alert("Phone number is required");
       return;
@@ -194,7 +202,7 @@ export default function JobDetailsPage() {
       alert("Highest qualification is required");
       return;
     }
-    if (!formData.resumeUrl) {
+    if (!formData.resumePath) {
       alert("Please upload your resume/CV");
       return;
     }
@@ -216,7 +224,7 @@ export default function JobDetailsPage() {
           years_of_experience: parseInt(formData.yearsOfExperience),
           current_workplace: formData.currentWorkplace,
           highest_qualification: formData.highestQualification,
-          resume_url: formData.resumeUrl,
+          resume_url: formData.resumePath, // Store path in resume_url field
           cover_letter: formData.coverLetter,
           available_from: formData.availableFrom || null,
           expected_salary: formData.expectedSalary,
@@ -270,7 +278,6 @@ export default function JobDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - Mobile Responsive */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -280,14 +287,12 @@ export default function JobDetailsPage() {
             >
               HealthNet Pro
             </Link>
-
             <Link
               href="/jobs"
               className="hidden md:block text-gray-600 hover:text-blue-600 transition"
             >
               Back to Jobs
             </Link>
-
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-gray-700 hover:text-blue-600"
@@ -316,7 +321,6 @@ export default function JobDetailsPage() {
               </svg>
             </button>
           </div>
-
           {mobileMenuOpen && (
             <div className="md:hidden border-t py-4 space-y-2">
               <Link
@@ -331,7 +335,6 @@ export default function JobDetailsPage() {
         </div>
       </header>
 
-      {/* Job Details */}
       <div className="container mx-auto px-4 py-4 md:py-8 max-w-4xl">
         <div className="bg-white rounded-xl shadow-md p-4 md:p-8 mb-6">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
@@ -397,7 +400,6 @@ export default function JobDetailsPage() {
             )}
           </div>
 
-          {/* Healthcare Professional Application Form */}
           {showApplyForm && (
             <div className="border-t pt-4 md:pt-6 mb-6 bg-gray-50 p-4 md:p-6 rounded-lg">
               <div className="flex items-center justify-between mb-4">
@@ -425,7 +427,6 @@ export default function JobDetailsPage() {
               </div>
 
               <form onSubmit={handleApply} className="space-y-4">
-                {/* Full Name & Email - Read Only */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -451,7 +452,6 @@ export default function JobDetailsPage() {
                   </div>
                 </div>
 
-                {/* Phone Number & License Number */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -477,14 +477,13 @@ export default function JobDetailsPage() {
                       name="licenseNumber"
                       value={formData.licenseNumber}
                       onChange={handleInputChange}
-                      placeholder="e.g., MCI-12345 or NMC-67890"
+                      placeholder="e.g., MCI-12345"
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                     />
                   </div>
                 </div>
 
-                {/* Specialization & Years of Experience */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -538,7 +537,6 @@ export default function JobDetailsPage() {
                   </div>
                 </div>
 
-                {/* Current Workplace & Highest Qualification */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -549,7 +547,7 @@ export default function JobDetailsPage() {
                       name="currentWorkplace"
                       value={formData.currentWorkplace}
                       onChange={handleInputChange}
-                      placeholder="e.g., Apollo Hospital, AIIMS"
+                      placeholder="e.g., Apollo Hospital"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                     />
                   </div>
@@ -574,21 +572,18 @@ export default function JobDetailsPage() {
                       <option value="MCh">MCh</option>
                       <option value="BSc Nursing">BSc Nursing</option>
                       <option value="MSc Nursing">MSc Nursing</option>
-                      <option value="GNM">
-                        GNM (General Nursing & Midwifery)
-                      </option>
-                      <option value="BPT">BPT (Physiotherapy)</option>
-                      <option value="MPT">MPT (Physiotherapy)</option>
+                      <option value="GNM">GNM</option>
+                      <option value="BPT">BPT</option>
+                      <option value="MPT">MPT</option>
                       <option value="B.Pharm">B.Pharm</option>
                       <option value="M.Pharm">M.Pharm</option>
-                      <option value="DMLT">DMLT (Lab Technician)</option>
-                      <option value="BMLT">BMLT (Lab Technician)</option>
+                      <option value="DMLT">DMLT</option>
+                      <option value="BMLT">BMLT</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Resume Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Resume/CV <span className="text-red-500">*</span>
@@ -612,9 +607,9 @@ export default function JobDetailsPage() {
                         <span className="text-sm text-gray-600">
                           {uploadingResume
                             ? "Uploading..."
-                            : formData.resumeUrl
+                            : formData.resumePath
                             ? "✓ Resume Uploaded"
-                            : "Click to Upload Resume (PDF/DOC - Max 5MB)"}
+                            : "Upload Resume (PDF/DOC - Max 5MB)"}
                         </span>
                       </div>
                       <input
@@ -625,20 +620,18 @@ export default function JobDetailsPage() {
                         className="hidden"
                       />
                     </label>
-                    {formData.resumeUrl && (
-                      <a
-                        href={formData.resumeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    {formData.resumePath && (
+                      <button
+                        type="button"
+                        onClick={handleViewResume}
                         className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-semibold border border-blue-600 rounded-lg"
                       >
                         View
-                      </a>
+                      </button>
                     )}
                   </div>
                 </div>
 
-                {/* Certifications */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Certifications (Optional)
@@ -648,7 +641,7 @@ export default function JobDetailsPage() {
                     name="certifications"
                     value={formData.certifications}
                     onChange={handleInputChange}
-                    placeholder="e.g., BLS, ACLS, ICU Certified, Trauma Care"
+                    placeholder="e.g., BLS, ACLS, ICU Certified"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -656,7 +649,6 @@ export default function JobDetailsPage() {
                   </p>
                 </div>
 
-                {/* Available From & Expected Salary */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -686,7 +678,6 @@ export default function JobDetailsPage() {
                   </div>
                 </div>
 
-                {/* Cover Letter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Cover Letter (Optional)
@@ -696,54 +687,27 @@ export default function JobDetailsPage() {
                     value={formData.coverLetter}
                     onChange={handleInputChange}
                     rows={5}
-                    placeholder="Why are you interested in this position? What makes you a great fit?"
+                    placeholder="Why are you interested in this position?"
                     maxLength={2000}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 placeholder-gray-400"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     {formData.coverLetter.length}/2000 characters
                   </p>
                 </div>
 
-                {/* Submit Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     type="submit"
                     disabled={applying || uploadingResume}
-                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm md:text-base"
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                   >
-                    {applying ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Submitting...
-                      </span>
-                    ) : (
-                      "Submit Application"
-                    )}
+                    {applying ? "Submitting..." : "Submit Application"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowApplyForm(false)}
-                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold text-sm md:text-base"
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
                   >
                     Cancel
                   </button>
@@ -752,9 +716,8 @@ export default function JobDetailsPage() {
             </div>
           )}
 
-          {/* Job Description */}
           <div className="border-t pt-4 md:pt-6">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
               Job Description
             </h2>
             <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
@@ -762,10 +725,9 @@ export default function JobDetailsPage() {
             </p>
           </div>
 
-          {/* Requirements */}
           {job.requirements && (
-            <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            <div className="border-t pt-4 md:pt-6 mt-4">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
                 Requirements
               </h2>
               <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
@@ -774,10 +736,9 @@ export default function JobDetailsPage() {
             </div>
           )}
 
-          {/* Benefits */}
           {job.benefits && (
-            <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+            <div className="border-t pt-4 md:pt-6 mt-4">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
                 Benefits
               </h2>
               <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
@@ -786,35 +747,34 @@ export default function JobDetailsPage() {
             </div>
           )}
 
-          {/* Posted By */}
-          <div className="border-t pt-4 md:pt-6 mt-4 md:mt-6">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
+          <div className="border-t pt-4 md:pt-6 mt-4">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
               Posted By
             </h2>
             <Link
               href={`/profile/${job.employer_id}`}
-              className="flex items-center space-x-3 md:space-x-4 hover:bg-gray-50 p-3 rounded-lg transition"
+              className="flex items-center space-x-3 hover:bg-gray-50 p-3 rounded-lg transition"
             >
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center">
                 {job.profiles?.profile_photo ? (
                   <Image
                     src={job.profiles.profile_photo}
                     alt={job.profiles.full_name || "User"}
-                    width={56}
-                    height={56}
+                    width={48}
+                    height={48}
                     className="object-cover w-full h-full"
                   />
                 ) : (
-                  <span className="text-lg md:text-xl font-bold text-blue-600">
+                  <span className="text-lg font-bold text-blue-600">
                     {job.profiles?.full_name?.charAt(0) || "U"}
                   </span>
                 )}
               </div>
               <div>
-                <p className="font-semibold text-sm md:text-base text-gray-900 hover:text-blue-600">
+                <p className="font-semibold text-gray-900 hover:text-blue-600">
                   {job.profiles?.full_name || "User"}
                 </p>
-                <p className="text-xs md:text-sm text-gray-600">
+                <p className="text-sm text-gray-600">
                   {job.profiles?.headline || "Healthcare Professional"}
                 </p>
               </div>
